@@ -1,0 +1,17 @@
+# .gitignore
+
+# Environment variables (NEVER commit this!)
+.env
+
+# Docker volumes
+postgres-data/
+redis-data/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.iml
