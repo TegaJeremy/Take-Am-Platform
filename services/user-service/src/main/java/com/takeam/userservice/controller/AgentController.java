@@ -2,12 +2,12 @@ package com.takeam.userservice.controller;
 
 import com.takeam.userservice.dto.request.AgentRegistrationRequestDto;
 import com.takeam.userservice.dto.request.AgentVerifyOTPDto;
-import com.takeam.userservice.dto.request.TraderRegistrationRequestDto; // ← Same DTO!
-import com.takeam.userservice.dto.response.AgentDetailResponseDto;
+import com.takeam.userservice.dto.request.TraderRegistrationRequestDto;
+import com.takeam.userservice.dto.response.AgentDetailDto;
 import com.takeam.userservice.dto.response.AuthResponseDto;
 import com.takeam.userservice.dto.response.UserResponseDto;
-import com.takeam.userservice.models.Trader;
-import com.takeam.userservice.models.User;
+import com.takeam.userservice.model.Trader;
+import com.takeam.userservice.model.User;
 import com.takeam.userservice.service.AgentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -47,30 +47,30 @@ public class AgentController {
 
     // ========== PROTECTED ENDPOINTS (AGENT ONLY) ==========
 
-//    @GetMapping("/details")
-//    public ResponseEntity<AgentDetailResponseDto> getAgentDetails(
-//            @AuthenticationPrincipal User user) {
-//
-//        AgentDetailResponseDto response = agentService.getAgentDetails(user.getId());
-//        return ResponseEntity.ok(response);
-//    }
+    @GetMapping("/details")
+    public ResponseEntity<AgentDetailDto> getAgentDetails(
+            @AuthenticationPrincipal User user) {
+
+        AgentDetailDto response = agentService.getAgentDetails(user.getId());
+        return ResponseEntity.ok(response);
+    }
 
     /**
      * Agent registers trader on their behalf
      * Uses the SAME DTO as normal trader registration!
      */
-//    @PostMapping("/register-trader")
-//    public ResponseEntity<AuthResponseDto> registerTraderOnBehalf(
-//            @AuthenticationPrincipal User user,
-//            @Valid @RequestBody TraderRegistrationRequestDto request) { // ← Same DTO!
-//
-//        log.info("Agent {} registering trader", user.getId());
-//        AuthResponseDto response = agentService.registerTraderOnBehalf(
-//                user.getId(),
-//                request
-//        );
-//        return new ResponseEntity<>(response, HttpStatus.CREATED);
-//    }
+    @PostMapping("/register-trader")
+    public ResponseEntity<AuthResponseDto> registerTraderOnBehalf(
+            @AuthenticationPrincipal User user,
+            @Valid @RequestBody TraderRegistrationRequestDto request) { // ← Same DTO!
+
+        log.info("Agent {} registering trader", user.getId());
+        AuthResponseDto response = agentService.registerTraderOnBehalf(
+                user.getId(),
+                request
+        );
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
 
     @GetMapping("/my-traders")
     public ResponseEntity<List<Trader>> getTradersRegisteredByMe(

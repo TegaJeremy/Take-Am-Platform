@@ -1,6 +1,6 @@
 package com.takeam.userservice.repository;
 
-import com.takeam.userservice.models.AdminAuditLog;
+import com.takeam.userservice.model.AdminAuditLog;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

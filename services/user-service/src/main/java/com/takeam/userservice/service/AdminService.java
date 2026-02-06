@@ -12,7 +12,8 @@ import com.takeam.userservice.exception.BadRequestException;
 import com.takeam.userservice.exception.ResourceNotFoundException;
 import com.takeam.userservice.exception.UnauthorizedException;
 import com.takeam.userservice.mapper.UserMapper;
-import com.takeam.userservice.models.*;
+import com.takeam.userservice.mapper.AgentMapper;
+import com.takeam.userservice.model.*;
 import com.takeam.userservice.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +26,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -41,6 +41,7 @@ public class AdminService {
     private final UserMapper userMapper;
     private final AdminAuditService auditService;
     private final EmailService emailService;
+    private final AgentMapper agentMapper;
 
     // ============ ADMIN CREATION ============
 
@@ -483,31 +484,25 @@ public class AdminService {
 
         return admin;
     }
-
     private AgentDetailDto mapToAgentDetailDto(Agent agent) {
+        // Use MapStruct for the basic mapping
+        AgentDetailDto dto = agentMapper.toDetailResponse(agent);
+
+        // Manually set the fields MapStruct can't handle
         User user = agent.getUser();
 
         // Count traders registered by this agent
         Integer tradersCount = traderRepository.findByRegisteredByAgentId(user.getId()).size();
+        dto.setTradersRegistered(tradersCount);
 
         // Get approver email if approved
-        String approverEmail = null;
         if (agent.getApprovedBy() != null) {
-            approverEmail = userRepository.findById(agent.getApprovedBy())
+            String approverEmail = userRepository.findById(agent.getApprovedBy())
                     .map(User::getEmail)
                     .orElse(null);
+            dto.setApprovedByAdminEmail(approverEmail);
         }
 
-        return AgentDetailDto.builder()
-                .user(userMapper.toUserResponseDto(user))
-                .assignedMarketId(agent.getAssignedMarketId())
-                .identityType(agent.getIdentityType())
-                .identityDocument(agent.getIdentityDocument())
-                .approvalStatus(agent.getApprovalStatus())
-                .rejectionReason(agent.getRejectionReason())
-                .approvedAt(agent.getApprovedAt())
-                .approvedByAdminEmail(approverEmail)
-                .tradersRegistered(tradersCount)
-                .build();
+        return dto;
     }
 }

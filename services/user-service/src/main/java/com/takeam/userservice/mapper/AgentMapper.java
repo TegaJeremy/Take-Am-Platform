@@ -2,8 +2,9 @@ package com.takeam.userservice.mapper;
 
 import com.takeam.userservice.dto.request.AgentRegistrationRequestDto;
 import com.takeam.userservice.dto.response.AgentDetailDto;
-import com.takeam.userservice.models.Agent;
-import com.takeam.userservice.models.User;
+//import com.takeam.userservice.dto.response.AgentStatusResponse;
+import com.takeam.userservice.model.Agent;
+import com.takeam.userservice.model.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -35,5 +36,12 @@ public interface AgentMapper {
 
     @Mapping(target = "user", source = "user")
     @Mapping(target = "tradersRegistered", ignore = true)
+    @Mapping(target = "approvedByAdminEmail", ignore = true)
+    @Mapping(source = "id", target = "agentId")
     AgentDetailDto toDetailResponse(Agent agent);
+
+
+//    @Mapping(target = "agentId", source = "id")
+//    @Mapping(target = "isActive", expression = "java(agent.getStatus() == AgentStatus.ACTIVE)")
+//    AgentStatusResponse toStatusResponse(Agent agent);
 }

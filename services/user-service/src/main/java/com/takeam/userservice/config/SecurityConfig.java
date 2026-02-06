@@ -18,7 +18,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
-@RequiredArgsConstructor
+@RequiredArgsConstructor    
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
@@ -26,55 +26,41 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // Disable CSRF (we're using JWT tokens, not cookies)
                 .csrf(AbstractHttpConfigurer::disable)
-
-                // Configure authorization
                 .authorizeHttpRequests(auth -> auth
-                        // Public endpoints (anyone can access)
+                        // ✅ PUBLIC ENDPOINTS FIRST - MOST SPECIFIC TO LEAST SPECIFIC
                         .requestMatchers(
-                                "/api/v1/traders/register",       // Trader registration
-                                "/api/v1/traders/verify-otp",     // Trader OTP verification
-                                "/api/v1/traders/resend-otp",     // Trader resend OTP
-
-                                "/api/v1/agents/register",        // Agent registration (to be built)
-                                "/api/v1/buyers/register",        // Buyer registration (to be built)
-
-                                //unified login path
-                                "/api/v1/auth/login",           // ✅ Unified login
+                                "/api/v1/traders/register",
+                                "/api/v1/traders/verify-otp",
+                                "/api/v1/traders/resend-otp",
+                                "/api/v1/agents/register",
+                                "/api/v1/agents/verify-otp",
+                                "/api/v1/buyers/register",
+                                "/api/v1/auth/login",
                                 "/api/v1/auth/verify-otp",
-
-                                "/api/v1/auth/login/request-otp", // Login OTP request
-                                "/api/v1/auth/login/verify-otp",  // Login OTP verification
-                                "/api/v1/auth/login/resend-otp",  // Resend login OTP
-
-                                "/api/v1/password/forgot",    // ← Add this
+                                "/api/v1/auth/login/request-otp",
+                                "/api/v1/auth/login/verify-otp",
+                                "/api/v1/auth/login/resend-otp",
+                                "/api/v1/password/forgot",
                                 "/api/v1/password/reset",
-
-                                "/health",                         // Health check
-                                "/actuator/**" ,            // Spring actuator (optional)
-
+                                "/health",
+                                "/actuator/**",
                                 "/api/v1/admin/seed"
                         ).permitAll()
-                        .requestMatchers("/api/v1/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
 
-                        // Protected endpoints (need JWT token)
+                        // ✅ ROLE-SPECIFIC ENDPOINTS - NOW THESE WORK!
                         .requestMatchers("/api/v1/password/change").authenticated()
+                        .requestMatchers("/api/v1/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
                         .requestMatchers("/api/v1/traders/**").hasRole("TRADER")
                         .requestMatchers("/api/v1/agents/**").hasRole("AGENT")
                         .requestMatchers("/api/v1/buyers/**").hasRole("BUYER")
-                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
 
-                        // All other requests need authentication
+                        // ✅ ALL OTHER REQUESTS
                         .anyRequest().authenticated()
                 )
-
-                // Stateless session (no session storage, pure JWT)
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-
-                // Add JWT filter before Spring Security's authentication filter
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

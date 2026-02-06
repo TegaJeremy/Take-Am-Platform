@@ -1,9 +1,8 @@
 package com.takeam.userservice.mapper;
 
 import com.takeam.userservice.dto.response.UserResponseDto;
-import com.takeam.userservice.models.User;
+import com.takeam.userservice.model.User;
 import org.mapstruct.Mapper;
-import org.springframework.stereotype.Component;
 
 @Mapper(componentModel = "spring")
 public interface UserMapper {

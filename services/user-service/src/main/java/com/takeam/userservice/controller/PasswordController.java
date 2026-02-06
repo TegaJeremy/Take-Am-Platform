@@ -4,7 +4,7 @@ import com.takeam.userservice.dto.request.ChangePasswordDto;
 import com.takeam.userservice.dto.request.ForgotPasswordDto;
 import com.takeam.userservice.dto.request.ResetPasswordDto;
 import com.takeam.userservice.dto.response.MessageResponseDto;
-import com.takeam.userservice.models.User;
+import com.takeam.userservice.model.User;
 import com.takeam.userservice.service.PasswordService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

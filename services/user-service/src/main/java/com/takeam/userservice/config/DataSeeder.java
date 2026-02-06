@@ -1,8 +1,8 @@
 package com.takeam.userservice.config;
 
-import com.takeam.userservice.models.Role;
-import com.takeam.userservice.models.User;
-import com.takeam.userservice.models.UserStatus;
+import com.takeam.userservice.model.Role;
+import com.takeam.userservice.model.User;
+import com.takeam.userservice.model.UserStatus;
 import com.takeam.userservice.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

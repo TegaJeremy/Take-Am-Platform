@@ -3,7 +3,7 @@ package com.takeam.userservice.controller;
 import com.takeam.userservice.dto.request.*;
 import com.takeam.userservice.dto.response.*;
 import com.takeam.userservice.mapper.UserMapper;
-import com.takeam.userservice.models.User;
+import com.takeam.userservice.model.User;
 import com.takeam.userservice.service.TraderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

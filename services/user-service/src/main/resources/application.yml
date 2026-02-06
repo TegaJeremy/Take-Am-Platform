@@ -1,5 +1,6 @@
 server:
-  port: 8081
+  port: ${PORT:8081}
+  address: 0.0.0.0
 
 spring:
   application:
@@ -7,34 +8,39 @@ spring:
 
   docker:
     compose:
-      enabled: true
-      file: C:/Users/TEGA JEREMY/Desktop/takeam-platform/docker-compose.yml
-      lifecycle-management: start-and-stop
+      enabled: false
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/${POSTGRES_DB:takeam_users}
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/takeam_users}
     username: ${POSTGRES_USER:takeam}
     password: ${POSTGRES_PASSWORD:takeam123}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 2
+      connection-timeout: 30000
 
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
-        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
 
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 60000
 
   mail:
     host: smtp.gmail.com
     port: 587
-    username: ${MAIL_USERNAME:}
-    password: ${MAIL_PASSWORD:}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
     properties:
       mail:
         smtp:
@@ -42,12 +48,13 @@ spring:
           starttls:
             enable: true
             required: true
-          connectiontimeout: 5000
-          timeout: 5000
-          writetimeout: 5000
 
-# JWT Configuration (NOT under spring!)
 jwt:
-  secret: ${JWT_SECRET}
+  secret: ${JWT_SECRET:TakeAmSuperSecretKeyForJWTTokenGenerationPleaseChangeInProduction2024ThisIsVeryLongAndSecure}
   expiration: 86400000
   refresh-expiration: 604800000
+
+logging:
+  level:
+    root: INFO
+    com.takeam: INFO

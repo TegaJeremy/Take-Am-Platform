@@ -1,7 +1,7 @@
 package com.takeam.userservice.repository;
 
-import com.takeam.userservice.models.Agent;
-import com.takeam.userservice.models.ApprovalStatus;
+import com.takeam.userservice.model.Agent;
+import com.takeam.userservice.model.ApprovalStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

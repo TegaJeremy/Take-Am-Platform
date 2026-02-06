@@ -1,7 +1,7 @@
 package com.takeam.userservice.repository;
 
-import com.takeam.userservice.models.Trader;
-import com.takeam.userservice.models.User;
+import com.takeam.userservice.model.Trader;
+import com.takeam.userservice.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

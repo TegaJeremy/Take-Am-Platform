@@ -2,8 +2,8 @@ package com.takeam.userservice.mapper;
 
 import com.takeam.userservice.dto.request.TraderRegistrationRequestDto;
 import com.takeam.userservice.dto.response.TraderDetailResponseDto;
-import com.takeam.userservice.models.Trader;
-import com.takeam.userservice.models.User;
+import com.takeam.userservice.model.Trader;
+import com.takeam.userservice.model.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

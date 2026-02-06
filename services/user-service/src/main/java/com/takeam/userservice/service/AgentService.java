@@ -4,7 +4,6 @@ import com.takeam.userservice.dto.request.AgentRegistrationRequestDto;
 import com.takeam.userservice.dto.request.AgentVerifyOTPDto;
 import com.takeam.userservice.dto.request.TraderRegistrationRequestDto;
 import com.takeam.userservice.dto.response.AgentDetailDto;
-import com.takeam.userservice.dto.response.AgentDetailResponseDto;
 import com.takeam.userservice.dto.response.AuthResponseDto;
 import com.takeam.userservice.dto.response.UserResponseDto;
 import com.takeam.userservice.exception.BadRequestException;
@@ -12,7 +11,7 @@ import com.takeam.userservice.exception.ResourceNotFoundException;
 import com.takeam.userservice.exception.UnauthorizedException;
 import com.takeam.userservice.mapper.AgentMapper;
 import com.takeam.userservice.mapper.UserMapper;
-import com.takeam.userservice.models.*;
+import com.takeam.userservice.model.*;
 import com.takeam.userservice.repository.AgentRepository;
 import com.takeam.userservice.repository.TraderRepository;
 import com.takeam.userservice.repository.UserRepository;
@@ -122,16 +121,16 @@ public class AgentService {
 
     // ============ GET AGENT DETAILS ============
 
-//    public AgentDetailResponseDto getAgentDetails(UUID userId) {  // ← Changed return type
-//        log.info("Fetching agent details for user: {}", userId);
-//
-//        Agent agent = findAgentByUserId(userId);
-//        List<Trader> tradersRegistered = traderRepository.findByRegisteredByAgentId(userId);
-//
-//        AgentDetailResponseDto response = agentMapper.toDetailResponse(agent);  // ← Changed variable type
-//
-//        return response;
-//    }
+    public AgentDetailDto getAgentDetails(UUID userId) {  // ← Changed return type
+        log.info("Fetching agent details for user: {}", userId);
+
+        Agent agent = findAgentByUserId(userId);
+        List<Trader> tradersRegistered = traderRepository.findByRegisteredByAgentId(userId);
+
+        AgentDetailDto response = agentMapper.toDetailResponse(agent);
+
+        return response;
+    }
 
     private Agent findAgentByUserId(UUID userId) {
         return agentRepository.findByUserId(userId)
@@ -144,26 +143,26 @@ public class AgentService {
      * Agent registers trader on their behalf
      * Just calls the existing trader registration service!
      */
-//    @Transactional
-//    public AuthResponseDto registerTraderOnBehalf(
-//            UUID agentId,
-//            TraderRegistrationRequestDto dto) { // ← Same DTO as normal registration!
-//
-//        log.info("Agent {} registering trader on behalf", agentId);
-//
-//        // 1. Verify agent is approved and active
-//        validateAgentCanRegisterTraders(agentId);
-//
-//        // 2. Call the EXISTING trader registration service!
-//        AuthResponseDto response = traderService.registerTrader(dto);
-//
-//        // 3. Track that this agent registered this trader
-//        trackAgentRegistration(dto.getPhoneNumber(), agentId);
-//
-//        log.info("Agent {} successfully registered trader {}", agentId, dto.getPhoneNumber());
-//
-//        return response;
-//    }
+    @Transactional
+    public AuthResponseDto registerTraderOnBehalf(
+            UUID agentId,
+            TraderRegistrationRequestDto dto) {
+
+        log.info("Agent {} registering trader on behalf", agentId);
+
+        // 1. Verify agent is approved and active
+        validateAgentCanRegisterTraders(agentId);
+
+        // 2. Call the EXISTING trader registration service!
+        AuthResponseDto response = traderService.registerTrader(dto);
+
+        // 3. Track that this agent registered this trader
+        trackAgentRegistration(dto.getPhoneNumber(), agentId);
+
+        log.info("Agent {} successfully registered trader {}", agentId, dto.getPhoneNumber());
+
+        return response;
+    }
 
     private void validateAgentCanRegisterTraders(UUID agentId) {
         Agent agent = findAgentByUserId(agentId);
@@ -177,19 +176,19 @@ public class AgentService {
         }
     }
 
-//    private void trackAgentRegistration(String phoneNumber, UUID agentId) {
-//        // After trader is registered, update the trader record to track the agent
-//        User traderUser = userRepository.findByPhoneNumber(phoneNumber)
-//                .orElseThrow(() -> new ResourceNotFoundException("Trader not found"));
-//
-//        Trader trader = traderRepository.findByUserId(traderUser.getId())
-//                .orElseThrow(() -> new ResourceNotFoundException("Trader profile not found"));
-//
-//        trader.setRegisteredByAgentId(agentId);
-//        traderRepository.save(trader);
-//
-//        log.info("Tracked: Agent {} registered trader {}", agentId, trader.getId());
-//    }
+    private void trackAgentRegistration(String phoneNumber, UUID agentId) {
+        // After trader is registered, update the trader record to track the agent
+        User traderUser = userRepository.findByPhoneNumber(phoneNumber)
+                .orElseThrow(() -> new ResourceNotFoundException("Trader not found"));
+
+        Trader trader = traderRepository.findByUserId(traderUser.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Trader profile not found"));
+
+        trader.setRegisteredByAgentId(agentId);
+        traderRepository.save(trader);
+
+        log.info("Tracked: Agent {} registered trader {}", agentId, trader.getId());
+    }
 
     // ============ GET TRADERS REGISTERED BY AGENT ============
 

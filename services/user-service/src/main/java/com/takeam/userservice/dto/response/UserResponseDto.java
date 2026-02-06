@@ -1,8 +1,8 @@
 package com.takeam.userservice.dto.response;
 
 
-import com.takeam.userservice.models.Role;
-import com.takeam.userservice.models.UserStatus;
+import com.takeam.userservice.model.Role;
+import com.takeam.userservice.model.UserStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

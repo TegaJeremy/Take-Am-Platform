@@ -20,6 +20,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.List;
 
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -35,44 +36,41 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
 
-        // 1. Extract Authorization header
+        // ✅ ADD THIS LINE AT THE VERY TOP
+        log.info("🔍 JWT Filter hit for: {} {}", request.getMethod(), request.getRequestURI());
+
         final String authHeader = request.getHeader("Authorization");
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            // No token, continue to next filter
+            log.warn("❌ No valid Authorization header found");
             filterChain.doFilter(request, response);
             return;
         }
 
         try {
-            // 2. Extract token (remove "Bearer " prefix)
             final String jwt = authHeader.substring(7);
-
-            // 3. Extract phone number from token
             final String phoneNumber = jwtUtil.extractPhoneNumber(jwt);
+            log.info("📱 Extracted phone number: {}", phoneNumber); // ← ADD THIS
 
-            // 4. If phone number exists and user is not already authenticated
             if (phoneNumber != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                log.info("🔎 Looking up user in database for: {}", phoneNumber);
 
-                // 5. Load user from database
                 var user = userRepository.findByPhoneNumber(phoneNumber)
                         .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-                // 6. Validate token
+                log.info("👤 Found user: {} with role: {}", user.getPhoneNumber(), user.getRole());
+                log.info("🔐 About to validate token...");
                 if (jwtUtil.validateToken(jwt, phoneNumber)) {
+                    log.info("✅ Token is VALID");
 
-                    // 7. Create authentication object
                     var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
-
+                    log.info("🎫 Setting authorities: {}", authorities);
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                            user,
+                            user,  // ← Keep the User object here
                             null,
                             authorities
                     );
 
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                    // 8. Set authentication in security context
                     SecurityContextHolder.getContext().setAuthentication(authentication);
 
                     log.info("User authenticated: {} with role: {}", phoneNumber, user.getRole());
@@ -80,9 +78,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         } catch (Exception e) {
             log.error("Cannot set user authentication: {}", e.getMessage());
+//            log.warn("❌ Token validation FAILED for: {}", phoneNumber);
+            e.printStackTrace();
         }
 
-        // 9. Continue filter chain
         filterChain.doFilter(request, response);
     }
 }

@@ -1,6 +1,6 @@
 package com.takeam.userservice.service;
 
-import com.takeam.userservice.models.AdminAuditLog;
+import com.takeam.userservice.model.AdminAuditLog;
 import com.takeam.userservice.repository.AdminAuditLogRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,9 +17,7 @@ public class AdminAuditService {
 
     private final AdminAuditLogRepository auditLogRepository;
 
-    /**
-     * Log admin action
-     */
+
     public void logAction(
             UUID adminId,
             String adminEmail,

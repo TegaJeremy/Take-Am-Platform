@@ -1,8 +1,8 @@
 package com.takeam.userservice.repository;
 
-import com.takeam.userservice.models.Role;
-import com.takeam.userservice.models.User;
-import com.takeam.userservice.models.UserStatus;
+import com.takeam.userservice.model.Role;
+import com.takeam.userservice.model.User;
+import com.takeam.userservice.model.UserStatus;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface UserRepository  extends JpaRepository<User, UUID> {
+public interface    UserRepository  extends JpaRepository<User, UUID> {
     Optional<User> findByEmail(String email);
     Optional<User> phoneNumber(String phoneNumber);
     boolean existsByPhoneNumber(String phoneNumber);
@@ -39,6 +39,8 @@ public interface UserRepository  extends JpaRepository<User, UUID> {
 
     @Query("SELECT COUNT(u) FROM User u WHERE u.createdAt >= :startDate AND u.createdAt < :endDate")
     Long countByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate);
+
+    Optional<User> findById(UUID agentId);
 }
 
 

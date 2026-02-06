@@ -1,0 +1,4 @@
+com\takeam\gateway\util\JwtUtil.class
+com\takeam\gateway\filter\AuthenticationFilter.class
+com\takeam\gateway\ApiGatewayApplication.class
+com\takeam\gateway\filter\AuthenticationFilter$Config.class
