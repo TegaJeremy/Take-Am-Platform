@@ -1,0 +1,145 @@
+name: Build and Push Docker Images
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'services/**'
+      - '.github/workflows/docker-build-push.yml'
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      user-service: ${{ steps.changes.outputs.user-service }}
+      api-gateway: ${{ steps.changes.outputs.api-gateway }}
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: 🔍 Detect changed services
+        id: changes
+        run: |
+          # Check which services changed
+          if git diff --name-only HEAD^ HEAD | grep -q "^services/user-service/"; then
+            echo "user-service=true" >> $GITHUB_OUTPUT
+          else
+            echo "user-service=false" >> $GITHUB_OUTPUT
+          fi
+
+          if git diff --name-only HEAD^ HEAD | grep -q "^services/api-gateway/"; then
+            echo "api-gateway=true" >> $GITHUB_OUTPUT
+          else
+            echo "api-gateway=false" >> $GITHUB_OUTPUT
+          fi
+
+  build-user-service:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.user-service == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: ☕ Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: 🔨 Build with Maven
+        working-directory: ./services/user-service
+        run: mvn clean package -DskipTests
+
+      - name: 🔐 Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: 📝 Generate version tag
+        id: version
+        run: |
+          # Use commit SHA as version
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          echo "tag=v1.${{ github.run_number }}-${SHORT_SHA}" >> $GITHUB_OUTPUT
+
+      - name: 🐳 Build and push User Service
+        working-directory: ./services/user-service
+        run: |
+          VERSION_TAG="${{ steps.version.outputs.tag }}"
+          
+          # Build
+          docker build -t takeam-user-service:${VERSION_TAG} --no-cache .
+          
+          # Tag
+          docker tag takeam-user-service:${VERSION_TAG} tjeremy4/takeam-user-service:${VERSION_TAG}
+          docker tag takeam-user-service:${VERSION_TAG} tjeremy4/takeam-user-service:latest
+          
+          # Push
+          docker push tjeremy4/takeam-user-service:${VERSION_TAG}
+          docker push tjeremy4/takeam-user-service:latest
+
+      - name: ✅ Success
+        run: |
+          echo "🎉 User Service pushed successfully!"
+          echo "Images:"
+          echo "  - tjeremy4/takeam-user-service:${{ steps.version.outputs.tag }}"
+          echo "  - tjeremy4/takeam-user-service:latest"
+
+  build-api-gateway:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.api-gateway == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: ☕ Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: 🔨 Build with Maven
+        working-directory: ./services/api-gateway
+        run: mvn clean package -DskipTests
+
+      - name: 🔐 Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: 📝 Generate version tag
+        id: version
+        run: |
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          echo "tag=v1.${{ github.run_number }}-${SHORT_SHA}" >> $GITHUB_OUTPUT
+
+      - name: 🐳 Build and push API Gateway
+        working-directory: ./services/api-gateway
+        run: |
+          VERSION_TAG="${{ steps.version.outputs.tag }}"
+          
+          # Build
+          docker build -t takeam-api-gateway:${VERSION_TAG} --no-cache .
+          
+          # Tag
+          docker tag takeam-api-gateway:${VERSION_TAG} tjeremy4/takeam-api-gateway:${VERSION_TAG}
+          docker tag takeam-api-gateway:${VERSION_TAG} tjeremy4/takeam-api-gateway:latest
+          
+          # Push
+          docker push tjeremy4/takeam-api-gateway:${VERSION_TAG}
+          docker push tjeremy4/takeam-api-gateway:latest
+
+      - name: ✅ Success
+        run: |
+          echo "🎉 API Gateway pushed successfully!"
+          echo "Images:"
+          echo "  - tjeremy4/takeam-api-gateway:${{ steps.version.outputs.tag }}"
+          echo "  - tjeremy4/takeam-api-gateway:latest"
