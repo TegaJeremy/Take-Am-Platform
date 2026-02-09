@@ -11,60 +11,101 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 public class GatewayRoutesConfig {
 
-    @Value("${services.user-service.url}")  // CHANGED FROM ${USER_SERVICE_URL}
+    @Value("${services.user-service.url}")
     private String userServiceUrl;
+
+    @Value("${services.intake-service.url}")  // ✅ ADDED
+    private String intakeServiceUrl;
 
     @Bean
     public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
 
-        String baseUrl = userServiceUrl.endsWith("/")
+        String userBaseUrl = userServiceUrl.endsWith("/")
                 ? userServiceUrl.substring(0, userServiceUrl.length() - 1)
                 : userServiceUrl;
 
-        log.info("🚀 Gateway Routes Config - Base URL: {}", baseUrl);
+        String intakeBaseUrl = intakeServiceUrl.endsWith("/")  // ✅ ADDED
+                ? intakeServiceUrl.substring(0, intakeServiceUrl.length() - 1)
+                : intakeServiceUrl;
+
+        log.info("🚀 Gateway Routes Config");
+        log.info("   User Service URL: {}", userBaseUrl);
+        log.info("   Intake Service URL: {}", intakeBaseUrl);  // ✅ ADDED
         log.info("🚀 Building routes...");
 
         RouteLocator locator = builder.routes()
+                // ==================== USER SERVICE ROUTES ====================
+
                 // Auth routes
                 .route("auth-routes", r -> {
                     log.info("✅ Registering auth-routes");
                     return r.path("/api/v1/auth/**")
-                            .uri(baseUrl);
+                            .uri(userBaseUrl);
                 })
 
                 // Password routes
                 .route("password-routes", r -> {
                     log.info("✅ Registering password-routes");
                     return r.path("/api/v1/password/**")
-                            .uri(baseUrl);
+                            .uri(userBaseUrl);
                 })
 
                 // Trader routes
                 .route("trader-routes", r -> {
                     log.info("✅ Registering trader-routes");
                     return r.path("/api/v1/traders/**")
-                            .uri(baseUrl);
+                            .uri(userBaseUrl);
                 })
 
                 // Agent routes
                 .route("agent-routes", r -> {
                     log.info("✅ Registering agent-routes");
                     return r.path("/api/v1/agents/**")
-                            .uri(baseUrl);
+                            .uri(userBaseUrl);
                 })
 
                 // Buyer routes
                 .route("buyer-routes", r -> {
                     log.info("✅ Registering buyer-routes");
                     return r.path("/api/v1/buyers/**")
-                            .uri(baseUrl);
+                            .uri(userBaseUrl);
                 })
 
                 // Admin routes
                 .route("admin-routes", r -> {
                     log.info("✅ Registering admin-routes");
                     return r.path("/api/v1/admin/**")
-                            .uri(baseUrl);
+                            .uri(userBaseUrl);
+                })
+
+                // User lookup routes
+                .route("user-routes", r -> {
+                    log.info("✅ Registering user-routes");
+                    return r.path("/api/v1/users/**")
+                            .uri(userBaseUrl);
+                })
+
+                // ==================== INTAKE SERVICE ROUTES ====================
+
+                // Trader requests routes
+                .route("trader-requests-routes", r -> {
+                    log.info("✅ Registering trader-requests-routes");
+                    return r.path("/api/v1/trader-requests/**")
+                            .uri(intakeBaseUrl);
+                })
+
+                // Agent requests routes
+                .route("agent-requests-routes", r -> {
+                    log.info("✅ Registering agent-requests-routes");
+                    return r.path("/api/v1/agent-requests/**")
+                            .uri(intakeBaseUrl);
+                })
+
+                // Grading routes
+                .route("gradings-routes", r -> {
+                    log.info("✅ Registering gradings-routes");
+                    return r.path("/api/v1/gradings/**")
+                            .uri(intakeBaseUrl);
                 })
 
                 .build();
