@@ -49,13 +49,21 @@ public class AgentService {
 
         User user = createAndSaveAgentUser(dto);
         createAndSaveAgent(dto, user);
-        sendRegistrationOTP(dto.getEmail(), dto.getFullName());
+        String otp = sendRegistrationOTP(dto.getEmail(), dto.getFullName());  // ✅ FIXED
 
         return new AuthResponseDto(
                 "Registration successful! OTP sent to your email address.",
                 dto.getEmail(),
-                true
+                true,
+                otp  // ✅ FIXED
         );
+    }
+
+    private String sendRegistrationOTP(String email, String fullName) {
+        String otp = otpService.generateOTP();
+        otpService.storeOTP(email, otp);
+        otpService.sendOTPToEmail(email, otp, fullName);
+        return otp;  // ✅ FIXED
     }
 
     private void validateEmailNotExists(String email) {
@@ -85,11 +93,11 @@ public class AgentService {
         log.info("Agent profile created for user: {}", user.getId());
     }
 
-    private void sendRegistrationOTP(String email, String fullName) {
-        String otp = otpService.generateOTP();
-        otpService.storeOTP(email, otp);
-        otpService.sendOTPToEmail(email, otp, fullName);
-    }
+//    private void sendRegistrationOTP(String email, String fullName) {
+//        String otp = otpService.generateOTP();
+//        otpService.storeOTP(email, otp);
+//        otpService.sendOTPToEmail(email, otp, fullName);
+//    }
 
     // agent otp
 

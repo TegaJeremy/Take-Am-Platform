@@ -43,7 +43,6 @@ public class TraderService {
 
         User user = createAndSaveUser(dto);
         createAndSaveTrader(dto, user);
-        sendRegistrationOTP(dto.getPhoneNumber());
         String otp = sendRegistrationOTP(dto.getPhoneNumber());
 
         return new AuthResponseDto(
