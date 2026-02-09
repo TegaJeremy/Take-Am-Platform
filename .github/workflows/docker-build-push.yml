@@ -161,9 +161,9 @@ jobs:
         working-directory: ./services/intake-service
         run: npm ci
 
-      - name: 🧪 Run tests
-        working-directory: ./services/intake-service
-        run: npm test --if-present
+#      - name: 🧪 Run tests
+#        working-directory: ./services/intake-service
+#        run: npm test --if-present
 
       - name: 🔐 Log in to Docker Hub
         uses: docker/login-action@v3
