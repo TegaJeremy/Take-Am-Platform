@@ -14,10 +14,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/agents")
@@ -27,7 +29,7 @@ public class AgentController {
 
     private final AgentService agentService;
 
-    // ========== PUBLIC ENDPOINTS ==========
+    //public
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponseDto> registerAgent(
@@ -45,7 +47,7 @@ public class AgentController {
         return ResponseEntity.ok(response);
     }
 
-    // ========== PROTECTED ENDPOINTS (AGENT ONLY) ==========
+    // protected agents only
 
     @GetMapping("/details")
     public ResponseEntity<AgentDetailDto> getAgentDetails(
@@ -55,10 +57,15 @@ public class AgentController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Agent registers trader on their behalf
-     * Uses the SAME DTO as normal trader registration!
-     */
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<AgentDetailDto> getAgentById(@PathVariable UUID id) {
+        log.info("Fetching agent details for ID: {}", id);
+        AgentDetailDto response = agentService.getAgentDetailsById(id);
+        return ResponseEntity.ok(response);
+    }
+
+
     @PostMapping("/register-trader")
     public ResponseEntity<AuthResponseDto> registerTraderOnBehalf(
             @AuthenticationPrincipal User user,

@@ -3,23 +3,20 @@ package com.takeam.userservice.controller;
 import com.takeam.userservice.dto.request.ClockInRequest;
 import com.takeam.userservice.dto.request.ClockOutRequest;
 import com.takeam.userservice.dto.response.AttendanceResponse;
-import com.takeam.userservice.exception.ResourceNotFoundException;
-import com.takeam.userservice.model.Agent;
 import com.takeam.userservice.model.User;
-import com.takeam.userservice.repository.UserRepository;
 import com.takeam.userservice.service.AgentAttendanceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
 
 @RestController
 @RequestMapping("/api/v1/agents/attendance")
@@ -32,11 +29,9 @@ public class AgentAttendanceController {
     @PostMapping("/clock-in")
     public ResponseEntity<AttendanceResponse> clockIn(
             @Valid @RequestBody ClockInRequest request,
-            Authentication authentication
+            @AuthenticationPrincipal User user
     ) {
-        User user = (User) authentication.getPrincipal();
         UUID agentId = user.getId();
-//        UUID agentId = UUID.fromString(authentication.getName());
         log.info("Clock-in request from agent: {}", agentId);
 
         AttendanceResponse response = attendanceService.clockIn(agentId, request);
@@ -46,45 +41,30 @@ public class AgentAttendanceController {
     @PostMapping("/clock-out")
     public ResponseEntity<AttendanceResponse> clockOut(
             @Valid @RequestBody ClockOutRequest request,
-            Authentication authentication
+            @AuthenticationPrincipal User user
     ) {
-        UUID agentId = UUID.fromString(authentication.getName());
+        UUID agentId = user.getId();
         log.info("Clock-out request from agent: {}", agentId);
 
         AttendanceResponse response = attendanceService.clockOut(agentId, request);
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/status")
+    public ResponseEntity<AttendanceResponse> getStatus(@AuthenticationPrincipal User user) {
+        UUID agentId = user.getId();
+        log.info("📊 Getting attendance status for agent: {}", agentId);
 
-//    @GetMapping("/status")
-//    public ResponseEntity<?> getStatus(Principal principal) {
-//        log.info("📊 Getting status for: {}", principal.getName());
-//
-//
-//        String phoneNumber = principal.getName();
-//
-//
-//
-//        Agent agent = agentRepository.findByPhoneNumber(phoneNumber)
-//                .orElseThrow(() -> new ResourceNotFoundException("Agent not found"));
-//
-//
-//        return ResponseEntity.ok(Map.of(
-//                "agentId", agent.getId(),
-//                "phoneNumber", agent.getPhoneNumber(),
-//                "firstName", agent.getFirstName(),
-//                "lastName", agent.getLastName(),
-//                "status", agent.getStatus(),
-//                "isActive", agent.getStatus() == AgentStatus.ACTIVE
-//        ));
-//    }
+        AttendanceResponse response = attendanceService.getClockInStatus(agentId);
+        return ResponseEntity.ok(response);
+    }
 
     @GetMapping("/history")
     public ResponseEntity<List<AttendanceResponse>> getHistory(
             @RequestParam(defaultValue = "30") int limit,
-            Authentication authentication
+            @AuthenticationPrincipal User user
     ) {
-        UUID agentId = UUID.fromString(authentication.getName());
+        UUID agentId = user.getId();
         log.info("Attendance history request for agent: {}, limit: {}", agentId, limit);
 
         List<AttendanceResponse> history = attendanceService.getAttendanceHistory(agentId, limit);
@@ -92,9 +72,15 @@ public class AgentAttendanceController {
     }
 
     @GetMapping("/is-clocked-in")
-    public ResponseEntity<Boolean> isClockedIn(Authentication authentication) {
-        UUID agentId = UUID.fromString(authentication.getName());
+    public ResponseEntity<Map<String, Boolean>> isClockedIn(@AuthenticationPrincipal User user) {
+        UUID agentId = user.getId();
+        log.info("Checking clock-in status for agent: {}", agentId);
+
         boolean isClockedIn = attendanceService.isAgentClockedIn(agentId);
-        return ResponseEntity.ok(isClockedIn);
+
+        Map<String, Boolean> response = new HashMap<>();
+        response.put("clockedIn", isClockedIn);
+
+        return ResponseEntity.ok(response);
     }
 }

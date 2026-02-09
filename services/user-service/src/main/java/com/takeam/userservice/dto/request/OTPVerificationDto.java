@@ -8,11 +8,30 @@ import lombok.Data;
 @Data
 public class OTPVerificationDto {
 
-    @NotBlank(message = "Phone number is required")
-    @Pattern(regexp = "^\\+?[1-9]\\d{1,14}$", message = "Invalid phone number")
-    private String phoneNumber;
+
+    @NotBlank(message = "Identifier is required")
+    private String identifier;
 
     @NotBlank(message = "OTP is required")
     @Size(min = 6, max = 6, message = "OTP must be 6 digits")
     private String otp;
+
+
+    @Deprecated
+    public String getPhoneNumber() {
+        return identifier;
+    }
+
+    @Deprecated
+    public void setPhoneNumber(String phoneNumber) {
+        this.identifier = phoneNumber;
+    }
+
+    public String getEmail() {
+        return identifier;
+    }
+
+    public void setEmail(String email) {
+        this.identifier = email;
+    }
 }

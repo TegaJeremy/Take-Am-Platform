@@ -1,0 +1,68 @@
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      routes:
+        # ==================== USER SERVICE ====================
+        - id: user-service
+          uri: ${USER_SERVICE_URL:https://takeam-user-service.onrender.com}
+          predicates:
+            - Path=/api/v1/auth/**,/api/v1/users/**,/api/v1/traders/**,/api/v1/agents/**,/api/v1/buyers/**,/api/v1/admin/**,/api/v1/password/**
+          filters:
+            - StripPrefix=0
+
+        # ==================== INTAKE SERVICE ====================
+        - id: intake-service
+          uri: ${INTAKE_SERVICE_URL:https://takeam-intake-service-latest.onrender.com}
+          predicates:
+            - Path=/api/v1/trader-requests/**,/api/v1/agent-requests/**,/api/v1/gradings/**
+          filters:
+            - StripPrefix=0
+
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+              - PATCH
+            allowedHeaders: "*"
+            allowCredentials: false
+            maxAge: 3600
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+server:
+  port: ${PORT:8080}
+
+jwt:
+  secret: ${JWT_SECRET}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    root: INFO
+    org.springframework.cloud.gateway: INFO
+    com.takeam.gateway: INFO
+
+

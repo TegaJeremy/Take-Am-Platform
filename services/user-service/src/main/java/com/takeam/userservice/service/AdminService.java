@@ -43,11 +43,9 @@ public class AdminService {
     private final EmailService emailService;
     private final AgentMapper agentMapper;
 
-    // ============ ADMIN CREATION ============
+    // creating admin
 
-    /**
-     * Seed initial Super Admin (run once)
-     */
+
     @Transactional
     public MessageResponseDto seedSuperAdmin(AdminSeedDto dto) {
         log.info("Attempting to seed Super Admin");
@@ -82,9 +80,7 @@ public class AdminService {
         );
     }
 
-    /**
-     * Create Admin (by Super Admin only)
-     */
+
     @Transactional
     public UserResponseDto createAdmin(UUID superAdminId, CreateAdminDto dto) {
         log.info("Creating admin by Super Admin: {}", superAdminId);
@@ -137,9 +133,7 @@ public class AdminService {
 
     // ============ AGENT APPROVAL ============
 
-    /**
-     * Get all pending agents
-     */
+
     public Page<AgentDetailDto> getPendingAgents(Pageable pageable) {
         log.info("Fetching pending agents");
 
@@ -148,9 +142,7 @@ public class AdminService {
         return agents.map(this::mapToAgentDetailDto);
     }
 
-    /**
-     * Get agent details
-     */
+
     public AgentDetailDto getAgentDetails(UUID agentId) {
         log.info("Fetching agent details: {}", agentId);
 
@@ -160,9 +152,7 @@ public class AdminService {
         return mapToAgentDetailDto(agent);
     }
 
-    /**
-     * Approve agent
-     */
+
     @Transactional
     public MessageResponseDto approveAgent(UUID adminId, UUID agentId, ApprovalActionDto dto) {
         log.info("Admin {} approving agent {}", adminId, agentId);

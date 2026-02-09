@@ -26,7 +26,7 @@ public class EmailService {
 
         } catch (Exception e) {
             log.error("Failed to send OTP email to: {}", toEmail, e);
-            // Fallback: Log OTP to console for development
+
             log.info("=".repeat(50));
             log.info(" EMAIL OTP FOR: {}", toEmail);
             log.info(" OTP CODE: {}", otp);

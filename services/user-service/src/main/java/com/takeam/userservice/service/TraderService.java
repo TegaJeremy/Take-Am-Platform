@@ -1,10 +1,9 @@
 package com.takeam.userservice.service;
 
-import com.takeam.userservice.dto.request.ChangePhoneNumberDto;
-import com.takeam.userservice.dto.request.OTPVerificationDto;
-import com.takeam.userservice.dto.request.TraderRegistrationRequestDto;
-import com.takeam.userservice.dto.request.UpdateTraderProfileDto;
+import com.takeam.userservice.config.JwtUtil;
+import com.takeam.userservice.dto.request.*;
 import com.takeam.userservice.dto.response.AuthResponseDto;
+import com.takeam.userservice.dto.response.TokenResponseDto;
 import com.takeam.userservice.dto.response.TraderDetailResponseDto;
 import com.takeam.userservice.dto.response.UserResponseDto;
 import com.takeam.userservice.exception.BadRequestException;
@@ -33,6 +32,7 @@ public class TraderService {
     private final OTPService otpService;
     private final TraderMapper traderMapper;
     private final UserMapper userMapper;
+    private final JwtUtil jwtUtil;
 
     //register
     @Transactional
@@ -44,11 +44,13 @@ public class TraderService {
         User user = createAndSaveUser(dto);
         createAndSaveTrader(dto, user);
         sendRegistrationOTP(dto.getPhoneNumber());
+        String otp = sendRegistrationOTP(dto.getPhoneNumber());
 
         return new AuthResponseDto(
                 "Registration successful! OTP sent to your phone number.",
                 dto.getPhoneNumber(),
-                true
+                true,
+                otp
         );
     }
 
@@ -72,16 +74,17 @@ public class TraderService {
         log.info("Trader profile created for user: {}", user.getId());
     }
 
-    private void sendRegistrationOTP(String phoneNumber) {
+    private String sendRegistrationOTP(String phoneNumber) {
         String otp = otpService.generateOTP();
         otpService.storeOTP(phoneNumber, otp);
         otpService.sendOTPToPhone(phoneNumber, otp);
+        return otp;
     }
 
 
 
     @Transactional
-    public UserResponseDto verifyOTP(OTPVerificationDto dto) {
+    public TokenResponseDto verifyOTP(OTPVerificationDto dto) {
         log.info("Verifying OTP for phone: {}", dto.getPhoneNumber());
 
         validateOTP(dto.getPhoneNumber(), dto.getOtp());
@@ -90,7 +93,30 @@ public class TraderService {
         activateUser(user);
         verifyTrader(user.getId());
 
-        return userMapper.toUserResponseDto(user);
+
+        return generateTokenResponse(user);
+    }
+
+    private TokenResponseDto generateTokenResponse(User user) {
+        String accessToken = jwtUtil.generateToken(
+                user.getId().toString(),
+                user.getPhoneNumber(),
+                user.getRole().name()
+        );
+
+        String refreshToken = jwtUtil.generateRefreshToken(
+                user.getId().toString()
+        );
+
+        UserResponseDto userDto = userMapper.toUserResponseDto(user);
+
+        return new TokenResponseDto(
+                accessToken,
+                refreshToken,
+                "Bearer",
+                86400000L,
+                userDto
+        );
     }
 
     private void validateOTP(String phoneNumber, String otp) {
@@ -126,12 +152,13 @@ public class TraderService {
         User user = findUserByPhone(phoneNumber);
         validateUserNotActive(user);
         validateNoRecentOTP(phoneNumber);
-        sendRegistrationOTP(phoneNumber);
+        String otp = sendRegistrationOTP(phoneNumber);
 
         return new AuthResponseDto(
                 "OTP resent successfully!",
                 phoneNumber,
-                true
+                true,
+                otp
         );
     }
 
@@ -159,6 +186,16 @@ public class TraderService {
     }
 
 
+    public TraderDetailResponseDto getTraderDetailsByUserId(UUID userId) {
+        log.info("Fetching trader details by user ID: {}", userId);
+
+
+        Trader trader = traderRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Trader not found for user ID: " + userId));
+
+
+        return traderMapper.toDetailResponse(trader);
+    }
 
     @Transactional
     public TraderDetailResponseDto updateProfile(UUID userId, UpdateTraderProfileDto dto) {
@@ -236,4 +273,6 @@ public class TraderService {
 
         log.info("Account deactivated: {}", userId);
     }
+
+
 }

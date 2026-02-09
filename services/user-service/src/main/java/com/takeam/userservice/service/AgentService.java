@@ -38,7 +38,7 @@ public class AgentService {
     private final TraderService traderService;
     private final PasswordEncoder passwordEncoder;
 
-    // ============ AGENT REGISTRATION ============
+    // agent registration
 
     @Transactional
     public AuthResponseDto registerAgent(AgentRegistrationRequestDto dto) {
@@ -91,7 +91,7 @@ public class AgentService {
         otpService.sendOTPToEmail(email, otp, fullName);
     }
 
-    // ============ AGENT OTP VERIFICATION ============
+    // agent otp
 
     @Transactional
     public UserResponseDto verifyOTP(AgentVerifyOTPDto dto) {
@@ -119,7 +119,7 @@ public class AgentService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 
-    // ============ GET AGENT DETAILS ============
+    //aget details
 
     public AgentDetailDto getAgentDetails(UUID userId) {  // ← Changed return type
         log.info("Fetching agent details for user: {}", userId);
@@ -132,17 +132,23 @@ public class AgentService {
         return response;
     }
 
+    public AgentDetailDto getAgentDetailsById(UUID agentId) {
+        log.info("Fetching agent details by agent ID: {}", agentId);
+
+        Agent agent = agentRepository.findById(agentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Agent not found with ID: " + agentId));
+
+        return agentMapper.toDetailResponse(agent);
+    }
+
     private Agent findAgentByUserId(UUID userId) {
         return agentRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Agent not found"));
     }
 
-    // ============ AGENT REGISTERS TRADER (SIMPLE!) ============
+    // agent register traders
 
-    /**
-     * Agent registers trader on their behalf
-     * Just calls the existing trader registration service!
-     */
+
     @Transactional
     public AuthResponseDto registerTraderOnBehalf(
             UUID agentId,
@@ -190,7 +196,6 @@ public class AgentService {
         log.info("Tracked: Agent {} registered trader {}", agentId, trader.getId());
     }
 
-    // ============ GET TRADERS REGISTERED BY AGENT ============
 
     public List<Trader> getTradersRegisteredByAgent(UUID agentId) {
         log.info("Fetching traders registered by agent: {}", agentId);

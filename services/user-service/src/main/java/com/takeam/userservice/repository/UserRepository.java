@@ -20,6 +20,7 @@ public interface    UserRepository  extends JpaRepository<User, UUID> {
     boolean existsByPhoneNumber(String phoneNumber);
     boolean existsByEmail(String email);
     Optional<User> findByPhoneNumberAndStatus(String phoneNumber, UserStatus status);
+
     Optional<User> findByPhoneNumber(String phoneNumber);
 
     //admin
@@ -41,6 +42,8 @@ public interface    UserRepository  extends JpaRepository<User, UUID> {
     Long countByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate);
 
     Optional<User> findById(UUID agentId);
+
+
 }
 
 

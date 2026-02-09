@@ -7,9 +7,9 @@ import lombok.Data;
 public class UnifiedLoginDto {
 
     @NotBlank(message = "Identifier is required (phone or email)")
-    private String identifier;  // Phone number OR email
+    private String identifier;
 
-    private String password;  // For agents/buyers/admin
+    private String password;
 
 
 }

@@ -17,21 +17,14 @@ public class UnifiedAuthController {
 
     private final UnifiedAuthService authService;
 
-    /**
-     * UNIFIED LOGIN - Handles all user types
-     *
-     * Traders: Send phone → Get OTP
-     * Others: Send email + password → Get JWT
-     */
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody UnifiedLoginDto request) {
         Object response = authService.login(request);
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Verify OTP (for traders only)
-     */
+
     @PostMapping("/verify-otp")
     public ResponseEntity<?> verifyOTP(@Valid @RequestBody OTPVerificationDto request) {
         var response = authService.verifyOTP(request);

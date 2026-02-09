@@ -32,12 +32,7 @@ public class AdminController {
 
     private final AdminService adminService;
 
-    // ============ ADMIN CREATION ============
 
-    /**
-     * Seed Super Admin (public - run once only)
-     * POST /api/v1/admin/seed
-     */
     @PostMapping("/seed")
     public ResponseEntity<MessageResponseDto> seedSuperAdmin(
             @Valid @RequestBody AdminSeedDto request) {
@@ -47,10 +42,7 @@ public class AdminController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    /**
-     * Create Admin (Super Admin only)
-     * POST /api/v1/admin/create
-     */
+
     @PostMapping("/create")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<UserResponseDto> createAdmin(
@@ -62,12 +54,7 @@ public class AdminController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    // ============ AGENT MANAGEMENT ============
 
-    /**
-     * Get pending agents
-     * GET /api/v1/admin/agents/pending?page=0&size=20
-     */
     @GetMapping("/agents/pending")
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<Page<AgentDetailDto>> getPendingAgents(
@@ -79,10 +66,7 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Get agent details
-     * GET /api/v1/admin/agents/{id}
-     */
+
     @GetMapping("/agents/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<AgentDetailDto> getAgentDetails(@PathVariable UUID id) {
@@ -90,10 +74,7 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Approve agent
-     * POST /api/v1/admin/agents/{id}/approve
-     */
+
     @PostMapping("/agents/{id}/approve")
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<MessageResponseDto> approveAgent(
@@ -105,10 +86,7 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Reject agent
-     * POST /api/v1/admin/agents/{id}/reject
-     */
+
     @PostMapping("/agents/{id}/reject")
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<MessageResponseDto> rejectAgent(
@@ -120,12 +98,9 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
 
-    // ============ USER MANAGEMENT ============
+    // user management
 
-    /**
-     * Get all users
-     * GET /api/v1/admin/users?role=TRADER&status=ACTIVE&page=0&size=20
-     */
+
     @GetMapping("/users")
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<Page<UserResponseDto>> getAllUsers(
@@ -139,10 +114,7 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Get user details
-     * GET /api/v1/admin/users/{id}
-     */
+
     @GetMapping("/users/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<UserResponseDto> getUserDetails(@PathVariable UUID id) {
@@ -150,10 +122,7 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Suspend user
-     * POST /api/v1/admin/users/{id}/suspend
-     */
+
     @PostMapping("/users/{id}/suspend")
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<MessageResponseDto> suspendUser(
@@ -165,10 +134,7 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Ban user
-     * POST /api/v1/admin/users/{id}/ban
-     */
+
     @PostMapping("/users/{id}/ban")
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<MessageResponseDto> banUser(
@@ -180,10 +146,7 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Reactivate user
-     * POST /api/v1/admin/users/{id}/reactivate
-     */
+
     @PostMapping("/users/{id}/reactivate")
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<MessageResponseDto> reactivateUser(
@@ -195,12 +158,9 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
 
-    // ============ DASHBOARD & STATS ============
+    // dashboards and stats
 
-    /**
-     * Get dashboard statistics
-     * GET /api/v1/admin/dashboard/stats
-     */
+
     @GetMapping("/dashboard/stats")
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<DashboardStatsDto> getDashboardStats() {
@@ -208,10 +168,7 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Get audit logs
-     * GET /api/v1/admin/audit-logs?page=0&size=50
-     */
+
     @GetMapping("/audit-logs")
     @PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
     public ResponseEntity<Page<AdminAuditLog>> getAuditLogs(

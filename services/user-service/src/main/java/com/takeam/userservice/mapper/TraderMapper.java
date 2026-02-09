@@ -1,5 +1,6 @@
 package com.takeam.userservice.mapper;
 
+import com.takeam.userservice.dto.request.TraderDetailsDTO;
 import com.takeam.userservice.dto.request.TraderRegistrationRequestDto;
 import com.takeam.userservice.dto.response.TraderDetailResponseDto;
 import com.takeam.userservice.model.Trader;
@@ -10,10 +11,7 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface TraderMapper {
 
-    /**
-     * Map DTO to User entity
-     * Traders register with phone numbers only
-     */
+
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "email", ignore = true)
     @Mapping(target = "passwordHash", ignore = true)
@@ -35,4 +33,6 @@ public interface TraderMapper {
 
     @Mapping(source = "user", target = "user")
     TraderDetailResponseDto toDetailResponse(Trader trader);
+
+
 }

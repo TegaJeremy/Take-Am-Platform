@@ -9,12 +9,9 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface BuyerMapper {
 
-    /**
-     * Map BuyerRegistrationDto to User
-     * NOTE: Password hashing happens in service, not mapper!
-     */
+
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "passwordHash", ignore = true)  // ← Set in service after hashing
+    @Mapping(target = "passwordHash", ignore = true)
     @Mapping(target = "role", constant = "BUYER")
     @Mapping(target = "status", constant = "ACTIVE")
     @Mapping(target = "lastLogin", ignore = true)
@@ -24,9 +21,8 @@ public interface BuyerMapper {
     @Mapping(target = "updatedAt", ignore = true)
     User toUser(BuyerRegistrationDto dto);
 
-    /**
-     * Map BuyerRegistrationDto to Buyer
-     */
+
+
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "user", ignore = true)
     @Mapping(target = "defaultShippingAddress", ignore = true)

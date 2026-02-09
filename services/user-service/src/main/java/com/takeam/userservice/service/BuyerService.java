@@ -1,12 +1,18 @@
 package com.takeam.userservice.service;
 
+import com.takeam.userservice.config.JwtUtil;
 import com.takeam.userservice.dto.request.BuyerRegistrationDto;
+import com.takeam.userservice.dto.request.OTPVerificationDto;
+import com.takeam.userservice.dto.response.AuthResponseDto;
+import com.takeam.userservice.dto.response.TokenResponseDto;
 import com.takeam.userservice.dto.response.UserResponseDto;
 import com.takeam.userservice.exception.BadRequestException;
+import com.takeam.userservice.exception.ResourceNotFoundException;
 import com.takeam.userservice.mapper.BuyerMapper;
 import com.takeam.userservice.mapper.UserMapper;
 import com.takeam.userservice.model.Buyer;
 import com.takeam.userservice.model.User;
+import com.takeam.userservice.model.UserStatus;
 import com.takeam.userservice.repository.BuyerRepository;
 import com.takeam.userservice.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,34 +29,117 @@ public class BuyerService {
     private final UserRepository userRepository;
     private final BuyerRepository buyerRepository;
     private final PasswordEncoder passwordEncoder;
-    private final BuyerMapper buyerMapper;  // ← MapStruct mapper
+    private final BuyerMapper buyerMapper;
     private final UserMapper userMapper;
+    private final OTPService otpService;
+    private final EmailService emailService;
+    private final JwtUtil jwtUtil;
 
     @Transactional
-    public UserResponseDto registerBuyer(BuyerRegistrationDto dto) {
-        log.info("Registering buyer: {}", dto.getEmail());
+    public AuthResponseDto registerBuyer(BuyerRegistrationDto dto) {
+        log.info("Registering buyer with email: {}", dto.getEmail());
 
-        // 1. Validate
         validateEmailNotExists(dto.getEmail());
         validatePhoneNotExists(dto.getPhoneNumber());
 
-        // 2. Use MapStruct to create User
         User user = buyerMapper.toUser(dto);
-
-        // 3. Hash password (MapStruct can't do this - security concern!)
         user.setPasswordHash(passwordEncoder.encode(dto.getPassword()));
+        user.setStatus(UserStatus.PENDING);
 
         User savedUser = userRepository.save(user);
-        log.info("User created with ID: {}", savedUser.getId());
 
-        // 4. Use MapStruct to create Buyer
         Buyer buyer = buyerMapper.toBuyer(dto);
         buyer.setUser(savedUser);
-
         buyerRepository.save(buyer);
-        log.info("Buyer profile created for user: {}", savedUser.getId());
 
-        return userMapper.toUserResponseDto(savedUser);
+        String otp = generateAndSendEmailOTP(dto.getEmail(), user.getFullName());
+
+        return new AuthResponseDto(
+                "Registration successful! OTP sent to your email.",
+                dto.getEmail(),
+                true,
+                otp
+        );
+    }
+
+    // verify otp
+
+    @Transactional
+    public TokenResponseDto verifyEmailOTP(OTPVerificationDto dto) {
+        log.info("Verifying buyer email OTP for: {}", dto.getEmail());
+
+        boolean isValid = otpService.verifyOTP(dto.getEmail(), dto.getOtp());
+        if (!isValid) {
+            throw new BadRequestException("Invalid or expired OTP");
+        }
+
+        User user = userRepository.findByEmail(dto.getEmail())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        user.setStatus(UserStatus.ACTIVE);
+        user.setVerified(true);
+        userRepository.save(user);
+
+        Buyer buyer = buyerRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Buyer profile not found"));
+
+        buyer.setEmailVerified(true);
+        buyerRepository.save(buyer);
+
+        return generateTokenResponse(user);
+    }
+
+
+
+    public AuthResponseDto resendEmailOTP(String email) {
+        log.info("Resending OTP to email: {}", email);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        if (user.getStatus() == UserStatus.ACTIVE) {
+            throw new BadRequestException("Account already verified");
+        }
+
+        if (otpService.hasValidOTP(email)) {
+            throw new BadRequestException("OTP already sent. Please wait before requesting again.");
+        }
+
+        generateAndSendEmailOTP(email, user.getFullName());
+
+        return new AuthResponseDto(
+                "OTP resent successfully!",
+                email,
+                true,
+                null
+        );
+    }
+
+
+
+    private String generateAndSendEmailOTP(String email, String fullName) {
+        String otp = otpService.generateOTP();
+        otpService.storeOTP(email, otp);
+        emailService.sendOTPEmail(email, otp, fullName);
+        return otp;
+    }
+
+    private TokenResponseDto generateTokenResponse(User user) {
+        String accessToken = jwtUtil.generateToken(
+                user.getId().toString(),
+                user.getEmail(),
+                user.getRole().name()
+        );
+
+        String refreshToken = jwtUtil.generateRefreshToken(user.getId().toString());
+
+        return new TokenResponseDto(
+                accessToken,
+                refreshToken,
+                "Bearer",
+                86400000L,
+                userMapper.toUserResponseDto(user)
+        );
     }
 
     private void validateEmailNotExists(String email) {

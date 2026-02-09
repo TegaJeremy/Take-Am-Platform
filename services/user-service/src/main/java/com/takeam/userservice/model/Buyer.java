@@ -24,7 +24,7 @@ public class Buyer {
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
-    // E-commerce fields (NO admin approval needed!)
+
     @Column(name = "default_shipping_address", columnDefinition = "TEXT")
     private String defaultShippingAddress;
 

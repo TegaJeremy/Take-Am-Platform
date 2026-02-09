@@ -3,6 +3,7 @@ package com.takeam.userservice.config;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -28,7 +29,7 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        // ✅ PUBLIC ENDPOINTS FIRST - MOST SPECIFIC TO LEAST SPECIFIC
+                        // public endpoints
                         .requestMatchers(
                                 "/api/v1/traders/register",
                                 "/api/v1/traders/verify-otp",
@@ -45,17 +46,25 @@ public class SecurityConfig {
                                 "/api/v1/password/reset",
                                 "/health",
                                 "/actuator/**",
-                                "/api/v1/admin/seed"
+                                "/api/v1/admin/seed",
+                                "/api/v1/buyers/register",
+                                "/api/v1/buyers/verify-email",
+                                "/api/v1/buyers/resend-otp"
+
                         ).permitAll()
 
-                        // ✅ ROLE-SPECIFIC ENDPOINTS - NOW THESE WORK!
+                        //  SPECIFIC GET ENDPOINTS FOR CROSS-ROLE ACCESS
+                        .requestMatchers(HttpMethod.GET, "/api/v1/traders/{id}").hasAnyRole("TRADER", "AGENT", "ADMIN", "SUPER_ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/agents/{id}").hasAnyRole("AGENT", "ADMIN", "SUPER_ADMIN")
+
+                        // private or role endpoints
                         .requestMatchers("/api/v1/password/change").authenticated()
                         .requestMatchers("/api/v1/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
                         .requestMatchers("/api/v1/traders/**").hasRole("TRADER")
                         .requestMatchers("/api/v1/agents/**").hasRole("AGENT")
                         .requestMatchers("/api/v1/buyers/**").hasRole("BUYER")
 
-                        // ✅ ALL OTHER REQUESTS
+                        // ALL OTHER REQUESTS
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session ->

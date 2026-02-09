@@ -43,23 +43,17 @@ public class AdminAuditService {
         log.info("Admin action logged: {} by {} on {}", action, adminEmail, targetUserEmail);
     }
 
-    /**
-     * Get all audit logs (paginated)
-     */
+
     public Page<AdminAuditLog> getAllLogs(Pageable pageable) {
         return auditLogRepository.findAllByOrderByCreatedAtDesc(pageable);
     }
 
-    /**
-     * Get logs by admin
-     */
+
     public Page<AdminAuditLog> getLogsByAdmin(UUID adminId, Pageable pageable) {
         return auditLogRepository.findAll(pageable);
     }
 
-    /**
-     * Get logs for specific user
-     */
+
     public Page<AdminAuditLog> getLogsByTargetUser(UUID userId, Pageable pageable) {
         return auditLogRepository.findAll(pageable);
     }

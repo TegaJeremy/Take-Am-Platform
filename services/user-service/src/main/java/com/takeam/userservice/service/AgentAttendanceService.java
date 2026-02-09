@@ -7,10 +7,7 @@ import com.takeam.userservice.dto.response.AttendanceResponse;
 import com.takeam.userservice.exception.BadRequestException;
 import com.takeam.userservice.exception.ResourceNotFoundException;
 import com.takeam.userservice.mapper.AttendanceMapper;
-import com.takeam.userservice.model.Agent;
-import com.takeam.userservice.model.AgentAttendance;
-import com.takeam.userservice.model.Role;
-import com.takeam.userservice.model.User;
+import com.takeam.userservice.model.*;
 import com.takeam.userservice.repository.AgentAttendanceRepository;
 import com.takeam.userservice.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -115,7 +112,7 @@ public class AgentAttendanceService {
                 });
     }
 
-    // ==================== VALIDATION METHODS ====================
+    // validation methods
 
     private void validateAgentExists(UUID agentId) {
         User agent = userRepository.findById(agentId)
@@ -123,6 +120,9 @@ public class AgentAttendanceService {
 
         if (!agent.getRole().equals(Role.AGENT)) {
             throw new BadRequestException("Only agents can clock in");
+        }
+        if (agent.getStatus() != UserStatus.ACTIVE) {
+            throw new BadRequestException("Agent account must be approved and active");
         }
     }
 

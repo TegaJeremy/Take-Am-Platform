@@ -7,8 +7,26 @@ spring:
 
   cloud:
     gateway:
+      routes:
+        # ==================== USER SERVICE ====================
+        - id: user-service
+          uri: ${USER_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/v1/auth/**,/api/v1/traders/**,/api/v1/agents/**,/api/v1/buyers/**,/api/v1/admin/**,/api/v1/password/**
+          filters:
+            - StripPrefix=0
+
+        # ==================== INTAKE SERVICE ====================
+        - id: intake-service
+          uri: ${INTAKE_SERVICE_URL:http://localhost:8084}
+          predicates:
+            - Path=/api/v1/trader-requests/**,/api/v1/agent-requests/**,/api/v1/gradings/**
+          filters:
+            - StripPrefix=0
+
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+
       globalcors:
         corsConfigurations:
           '[/**]':
@@ -16,6 +34,7 @@ spring:
               - "http://localhost:3000"
               - "http://localhost:5173"
               - "https://takeam.com"
+              - "https://www.takeam.com"
             allowedMethods:
               - GET
               - POST
@@ -28,19 +47,22 @@ spring:
             allowCredentials: true
             maxAge: 3600
 
-  redis:
-    host: ${REDIS_HOST:localhost}
-    port: ${REDIS_PORT:6379}
-    password: ${REDIS_PASSWORD:}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
 
 # JWT configuration
 jwt:
   secret: ${JWT_SECRET:your-secret-key-here-make-it-very-long-and-secure-at-least-256-bits}
 
-# Services configuration - THIS IS THE FIX!
+# Services configuration
 services:
   user-service:
     url: ${USER_SERVICE_URL:http://localhost:8081}
+  intake-service:
+    url: ${INTAKE_SERVICE_URL:http://localhost:8084}
 
 # Actuator endpoints
 management:

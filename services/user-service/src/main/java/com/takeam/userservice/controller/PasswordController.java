@@ -1,7 +1,7 @@
 package com.takeam.userservice.controller;
 
 import com.takeam.userservice.dto.request.ChangePasswordDto;
-import com.takeam.userservice.dto.request.ForgotPasswordDto;
+import com.takeam.userservice.dto.request.EmailRequestDto;
 import com.takeam.userservice.dto.request.ResetPasswordDto;
 import com.takeam.userservice.dto.response.MessageResponseDto;
 import com.takeam.userservice.model.User;
@@ -21,10 +21,7 @@ public class PasswordController {
 
     private final PasswordService passwordService;
 
-    /**
-     * Change password (user must be logged in)
-     * POST /api/v1/password/change
-     */
+
     @PostMapping("/change")
     public ResponseEntity<MessageResponseDto> changePassword(
             @AuthenticationPrincipal User user,
@@ -35,23 +32,17 @@ public class PasswordController {
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Forgot password - Request OTP (public endpoint)
-     * POST /api/v1/password/forgot
-     */
+
     @PostMapping("/forgot")
     public ResponseEntity<MessageResponseDto> forgotPassword(
-            @Valid @RequestBody ForgotPasswordDto request) {
+            @Valid @RequestBody EmailRequestDto request) {
 
         log.info("Forgot password request for: {}", request.getEmail());
         MessageResponseDto response = passwordService.forgotPassword(request);
         return ResponseEntity.ok(response);
     }
 
-    /**
-     * Reset password with OTP (public endpoint)
-     * POST /api/v1/password/reset
-     */
+
     @PostMapping("/reset")
     public ResponseEntity<MessageResponseDto> resetPassword(
             @Valid @RequestBody ResetPasswordDto request) {

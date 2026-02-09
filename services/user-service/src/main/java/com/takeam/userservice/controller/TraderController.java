@@ -10,8 +10,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/traders")
@@ -33,10 +36,10 @@ public class TraderController {
     }
 
     @PostMapping("/verify-otp")
-    public ResponseEntity<UserResponseDto> verifyOTP(
+    public ResponseEntity<TokenResponseDto> verifyOTP(
             @Valid @RequestBody OTPVerificationDto request) {
 
-        UserResponseDto response = traderService.verifyOTP(request);
+        TokenResponseDto response = traderService.verifyOTP(request);
         return ResponseEntity.ok(response);
     }
 
@@ -63,6 +66,14 @@ public class TraderController {
             @AuthenticationPrincipal User user) {
 
         TraderDetailResponseDto response = traderService.getTraderDetails(user.getId());
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{userId}")
+    @PreAuthorize("hasAnyRole('TRADER', 'AGENT', 'ADMIN', 'SUPER_ADMIN')")
+    public ResponseEntity<TraderDetailResponseDto> getTraderByUserId(@PathVariable UUID userId) {
+        log.info("Fetching trader details for user ID: {}", userId);
+        TraderDetailResponseDto response = traderService.getTraderDetailsByUserId(userId);
         return ResponseEntity.ok(response);
     }
 
