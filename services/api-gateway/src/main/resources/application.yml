@@ -5,6 +5,9 @@ spring:
   application:
     name: api-gateway
 
+  main:
+    lazy-initialization: true  # ✅ ADDED - Faster startup
+
   cloud:
     gateway:
       routes:
@@ -47,11 +50,12 @@ spring:
             allowCredentials: true
             maxAge: 3600
 
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
+  # ✅ COMMENTED OUT - Only enable if you actually use Redis
+  # data:
+  #   redis:
+  #     host: ${REDIS_HOST:localhost}
+  #     port: ${REDIS_PORT:6379}
+  #     password: ${REDIS_PASSWORD:}
 
 # JWT configuration
 jwt:
