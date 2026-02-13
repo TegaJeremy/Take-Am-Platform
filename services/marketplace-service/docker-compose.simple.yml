@@ -1,0 +1,45 @@
+version: "3.9"
+
+services:
+  marketplace-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.simple
+    platform: linux/amd64
+    container_name: takeam-marketplace
+    ports:
+      - "8085:8085"
+    environment:
+      - PORT=8085
+      - DB_HOST=marketplace-db
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres123
+      - DB_NAME=takeam_marketplace
+      - JWT_SECRET=TakeAmSuperSecretKeyForJWTTokenGenerationPleaseChangeInProduction2024ThisIsVeryLongAndSecure
+    depends_on:
+      - marketplace-db
+    networks:
+      - takeam-network
+
+  marketplace-db:
+    image: postgres:15-alpine
+    platform: linux/amd64
+    container_name: takeam-marketplace-db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres123
+      - POSTGRES_DB=takeam_marketplace
+    ports:
+      - "5434:5432"
+    volumes:
+      - marketplace_db_data:/var/lib/postgresql/data
+    networks:
+      - takeam-network
+
+volumes:
+  marketplace_db_data:
+
+networks:
+  takeam-network:
+    driver: bridge
