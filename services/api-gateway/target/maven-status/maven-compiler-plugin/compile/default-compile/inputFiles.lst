@@ -1,6 +1,6 @@
-C:\Users\TEGA JEREMY\Desktop\takeam-platform\services\api-gateway\src\main\java\com\takeam\gateway\ApiGatewayApplication.java
-C:\Users\TEGA JEREMY\Desktop\takeam-platform\services\api-gateway\src\main\java\com\takeam\gateway\config\CorsConfig.java
-C:\Users\TEGA JEREMY\Desktop\takeam-platform\services\api-gateway\src\main\java\com\takeam\gateway\config\GatewayRoutesConfig.java
-C:\Users\TEGA JEREMY\Desktop\takeam-platform\services\api-gateway\src\main\java\com\takeam\gateway\controller\HealthController.java
-C:\Users\TEGA JEREMY\Desktop\takeam-platform\services\api-gateway\src\main\java\com\takeam\gateway\filter\AuthenticationFilter.java
-C:\Users\TEGA JEREMY\Desktop\takeam-platform\services\api-gateway\src\main\java\com\takeam\gateway\util\JwtUtil.java
+/home/jeremy/Desktop/takeam-platform/services/api-gateway/src/main/java/com/takeam/gateway/ApiGatewayApplication.java
+/home/jeremy/Desktop/takeam-platform/services/api-gateway/src/main/java/com/takeam/gateway/config/CorsConfig.java
+/home/jeremy/Desktop/takeam-platform/services/api-gateway/src/main/java/com/takeam/gateway/config/GatewayRoutesConfig.java
+/home/jeremy/Desktop/takeam-platform/services/api-gateway/src/main/java/com/takeam/gateway/controller/HealthController.java
+/home/jeremy/Desktop/takeam-platform/services/api-gateway/src/main/java/com/takeam/gateway/filter/AuthenticationFilter.java
+/home/jeremy/Desktop/takeam-platform/services/api-gateway/src/main/java/com/takeam/gateway/util/JwtUtil.java
