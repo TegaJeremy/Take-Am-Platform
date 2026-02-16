@@ -14,6 +14,7 @@ jobs:
       user-service: ${{ steps.changes.outputs.user-service }}
       api-gateway: ${{ steps.changes.outputs.api-gateway }}
       intake-service: ${{ steps.changes.outputs.intake-service }}
+      marketplace-service: ${{ steps.changes.outputs.marketplace-service }}
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
@@ -23,7 +24,6 @@ jobs:
       - name: 🔍 Detect changed services
         id: changes
         run: |
-          # Check which services changed
           if git diff --name-only HEAD^ HEAD | grep -q "^services/user-service/"; then
             echo "user-service=true" >> $GITHUB_OUTPUT
           else
@@ -40,6 +40,12 @@ jobs:
             echo "intake-service=true" >> $GITHUB_OUTPUT
           else
             echo "intake-service=false" >> $GITHUB_OUTPUT
+          fi
+
+          if git diff --name-only HEAD^ HEAD | grep -q "^services/marketplace-service/"; then
+            echo "marketplace-service=true" >> $GITHUB_OUTPUT
+          else
+            echo "marketplace-service=false" >> $GITHUB_OUTPUT
           fi
 
   build-user-service:
@@ -84,6 +90,12 @@ jobs:
           
           docker push tjeremy4/takeam-user-service:${VERSION_TAG}
           docker push tjeremy4/takeam-user-service:latest
+
+      - name: 🚀 Trigger Render Deploy
+        run: |
+          echo "Triggering Render deployment..."
+          curl -X POST ${{ secrets.RENDER_USER_SERVICE_DEPLOY_HOOK }}
+          echo "✅ Render deploy triggered!"
 
       - name: ✅ Success
         run: |
@@ -161,10 +173,6 @@ jobs:
         working-directory: ./services/intake-service
         run: npm ci
 
-#      - name: 🧪 Run tests
-#        working-directory: ./services/intake-service
-#        run: npm test --if-present
-
       - name: 🔐 Log in to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -195,3 +203,62 @@ jobs:
           echo "Images:"
           echo "  - tjeremy4/takeam-intake-service:${{ steps.version.outputs.tag }}"
           echo "  - tjeremy4/takeam-intake-service:latest"
+
+  build-marketplace-service:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.marketplace-service == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐹 Set up Go 1.23
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache-dependency-path: services/marketplace-service/go.sum
+
+      - name: 📦 Download dependencies
+        working-directory: ./services/marketplace-service
+        run: go mod download
+
+      - name: 🔨 Build Go binary
+        working-directory: ./services/marketplace-service
+        run: go build -o marketplace-service main.go
+
+      - name: 🔐 Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: 📝 Generate version tag
+        id: version
+        run: |
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          echo "tag=v1.${{ github.run_number }}-${SHORT_SHA}" >> $GITHUB_OUTPUT
+
+      - name: 🐳 Build and push Marketplace Service
+        working-directory: ./services/marketplace-service
+        run: |
+          VERSION_TAG="${{ steps.version.outputs.tag }}"
+          
+          docker build -t takeam-marketplace-service:${VERSION_TAG} --no-cache .
+          docker tag takeam-marketplace-service:${VERSION_TAG} tjeremy4/takeam-marketplace-service:${VERSION_TAG}
+          docker tag takeam-marketplace-service:${VERSION_TAG} tjeremy4/takeam-marketplace-service:latest
+          
+          docker push tjeremy4/takeam-marketplace-service:${VERSION_TAG}
+          docker push tjeremy4/takeam-marketplace-service:latest
+
+      - name: 🚀 Trigger Render Deploy
+        run: |
+          echo "Triggering Render deployment..."
+          curl -X POST ${{ secrets.RENDER_MARKETPLACE_SERVICE_DEPLOY_HOOK }}
+          echo "✅ Render deploy triggered!"
+
+      - name: ✅ Success
+        run: |
+          echo "🎉 Marketplace Service pushed successfully!"
+          echo "Images:"
+          echo "  - tjeremy4/takeam-marketplace-service:${{ steps.version.outputs.tag }}"
+          echo "  - tjeremy4/takeam-marketplace-service:latest"

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.function.Function;
 
 @Component
 @Slf4j
@@ -50,5 +51,14 @@ public class JwtUtil {
 
     public String extractRole(String token) {
         return extractAllClaims(token).get("role", String.class);
+    }
+
+    public String extractPhoneNumber(String token) {
+        return extractClaim(token, claims -> claims.get("phoneNumber", String.class));
+    }
+
+    private <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = extractAllClaims(token);
+        return claimsResolver.apply(claims);
     }
 }

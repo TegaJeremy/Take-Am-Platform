@@ -26,7 +26,7 @@ func (pi *ProductImage) BeforeCreate(tx *gorm.DB) error {
 	return nil
 }
 
-// TableName specifies the table name
+
 func (ProductImage) TableName() string {
 	return "product_images"
 }

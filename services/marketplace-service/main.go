@@ -1,82 +1,34 @@
-package database
+package main
 
 import (
-	"fmt"
 	"log"
-	"os"
-	"time"
 
-	"marketplace-service/models"
-
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
+	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
+	"marketplace-service/config"
+	"marketplace-service/database"
+	"marketplace-service/routes"
+	"marketplace-service/services"
 )
 
-var DB *gorm.DB
+func main() {
+	_ = godotenv.Load()
+	log.Println("Starting Marketplace Service...")
 
-// ConnectDB connects to PostgreSQL database with retry logic
-func ConnectDB() {
-	// Get database credentials from environment
-	host := os.Getenv("DB_HOST")
-	port := os.Getenv("DB_PORT")
-	user := os.Getenv("DB_USER")
-	password := os.Getenv("DB_PASSWORD")
-	dbname := os.Getenv("DB_NAME")
+	cfg := config.LoadConfig()
 
-	// Build connection string
-	dsn := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
-		host, user, password, dbname, port,
-	)
+	database.ConnectDB()
 
-	// Retry connection up to 10 times
-	var err error
-	maxRetries := 10
-	
-	for i := 1; i <= maxRetries; i++ {
-		log.Printf("⏳ Attempting database connection (attempt %d/%d)...", i, maxRetries)
-		
-		DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
-			Logger: logger.Default.LogMode(logger.Info),
-		})
-
-		if err == nil {
-			// Connection successful
-			log.Println("✅ Database connected successfully")
-			break
-		}
-
-		// Connection failed, wait and retry
-		log.Printf("❌ Database connection failed: %v", err)
-		
-		if i < maxRetries {
-			log.Printf("⏰ Retrying in 3 seconds...")
-			time.Sleep(3 * time.Second)
-		} else {
-			log.Fatal("❌ Failed to connect to database after all retries")
-		}
+	if err := services.InitCloudinary(cfg.CloudinaryName, cfg.CloudinaryAPIKey, cfg.CloudinarySecret); err != nil {
+		log.Fatal("Failed to initialize Cloudinary:", err)
 	}
 
-	// Auto-migrate models (create tables)
-	log.Println("🔄 Running database migrations...")
-	err = DB.AutoMigrate(
-		&models.Product{},
-		&models.ProductImage{},
-		&models.Cart{},
-		&models.CartItem{},
-		&models.Order{},
-		&models.OrderItem{},
-	)
+	router := gin.Default()
 
-	if err != nil {
-		log.Fatal("Failed to migrate database:", err)
+	routes.SetupRoutes(router, cfg)  
+
+	log.Printf("Server running on port %s\n", cfg.Port)
+	if err := router.Run(":" + cfg.Port); err != nil {
+		log.Fatal("Failed to start server:", err)
 	}
-
-	log.Println("Database tables created/updated successfully")
-}
-
-// GetDB returns the database instance
-func GetDB() *gorm.DB {
-	return DB
 }

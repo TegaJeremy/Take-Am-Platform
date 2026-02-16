@@ -2,26 +2,69 @@ server:
   port: ${PORT:8080}
 
 spring:
-  application:
-    name: api-gateway
-
-  main:
-    lazy-initialization: true  # ✅ ADDED - Faster startup
-
   cloud:
     gateway:
       routes:
-        # ==================== USER SERVICE ====================
+        # Marketplace Admin Products - WITH AUTH
+        - id: marketplace-admin-products
+          uri: ${MARKETPLACE_SERVICE_URL:http://localhost:8085}
+          order: 1
+          predicates:
+            - Path=/api/v1/admin/products/**
+          filters:
+            - AuthenticationFilter
+            - StripPrefix=0
+              # Marketplace Cart/Orders/Payment - WITH AUTH
+              # Marketplace Cart/Orders/Payment - WITH AUTH
+        - id: marketplace-protected
+          uri: ${MARKETPLACE_SERVICE_URL:http://localhost:8085}
+          order: 2
+          predicates:
+              - Path=/api/v1/marketplace/cart/**,/api/v1/marketplace/orders/**,/api/v1/marketplace/checkout/**,/api/v1/marketplace/payment/**
+          filters:
+                  - AuthenticationFilter
+                  - StripPrefix=0
+
+        # Marketplace Cart/Orders - WITH AUTH
+        - id: marketplace-protected
+          uri: ${MARKETPLACE_SERVICE_URL:http://localhost:8085}
+          order: 2
+          predicates:
+            - Path=/api/v1/marketplace/cart/**,/api/v1/marketplace/orders/**,/api/v1/marketplace/checkout/**
+          filters:
+            - AuthenticationFilter
+            - StripPrefix=0
+
+        # Marketplace Public - NO AUTH
+        - id: marketplace-public
+          uri: ${MARKETPLACE_SERVICE_URL:http://localhost:8085}
+          order: 3
+          predicates:
+            - Path=/api/v1/marketplace/**
+          filters:
+            - StripPrefix=0
+        # Paystack Webhook - NO AUTH (must be public)
+        - id: marketplace-webhook
+          uri: ${MARKETPLACE_SERVICE_URL:http://localhost:8085}
+          order: 1
+          predicates:
+            - Path=/api/v1/marketplace/payment/webhook
+          filters:
+            - StripPrefix=0
+
+        # User Service
         - id: user-service
           uri: ${USER_SERVICE_URL:http://localhost:8081}
+          order: 2
           predicates:
             - Path=/api/v1/auth/**,/api/v1/traders/**,/api/v1/agents/**,/api/v1/buyers/**,/api/v1/admin/**,/api/v1/password/**
           filters:
             - StripPrefix=0
 
-        # ==================== INTAKE SERVICE ====================
+        # Intake Service
         - id: intake-service
           uri: ${INTAKE_SERVICE_URL:http://localhost:8084}
+          order: 3
           predicates:
             - Path=/api/v1/trader-requests/**,/api/v1/agent-requests/**,/api/v1/gradings/**
           filters:
@@ -50,16 +93,9 @@ spring:
             allowCredentials: true
             maxAge: 3600
 
-  # ✅ COMMENTED OUT - Only enable if you actually use Redis
-  # data:
-  #   redis:
-  #     host: ${REDIS_HOST:localhost}
-  #     port: ${REDIS_PORT:6379}
-  #     password: ${REDIS_PASSWORD:}
 
-# JWT configuration
 jwt:
-  secret: ${JWT_SECRET:your-secret-key-here-make-it-very-long-and-secure-at-least-256-bits}
+  secret: ${JWT_SECRET}
 
 # Services configuration
 services:
@@ -67,6 +103,8 @@ services:
     url: ${USER_SERVICE_URL:http://localhost:8081}
   intake-service:
     url: ${INTAKE_SERVICE_URL:http://localhost:8084}
+  marketplace-service:
+    url: ${MARKETPLACE_SERVICE_URL:http://localhost:8085}
 
 # Actuator endpoints
 management:

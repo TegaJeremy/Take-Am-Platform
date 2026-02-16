@@ -81,11 +81,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                    log.info("✅ User authenticated: {} with role: {}", phoneNumber, user.getRole());
+                    log.info("User authenticated: {} with role: {}", phoneNumber, user.getRole());
                 }
             }
         } catch (Exception e) {
-            log.error("❌ Cannot set user authentication: {}", e.getMessage());
+            log.error(" Cannot set user authentication: {}", e.getMessage());
             e.printStackTrace();
         }
 

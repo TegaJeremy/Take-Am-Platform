@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -29,12 +30,10 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
         return (exchange, chain) -> {
             ServerHttpRequest request = exchange.getRequest();
 
-            // Check if Authorization header exists
             if (!request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
                 return onError(exchange, "Missing authorization header", HttpStatus.UNAUTHORIZED);
             }
 
-            // Extract token
             String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
                 return onError(exchange, "Invalid authorization header format", HttpStatus.UNAUTHORIZED);
@@ -42,19 +41,20 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
 
             String token = authHeader.substring(7);
 
-            // Validate token
             if (!jwtUtil.isTokenValid(token)) {
                 return onError(exchange, "Invalid or expired token", HttpStatus.UNAUTHORIZED);
             }
 
-            // Extract user info and add to headers (for downstream services)
+            // Extract user info
             String userId = jwtUtil.extractUserId(token);
             String role = jwtUtil.extractRole(token);
+            String phoneNumber = jwtUtil.extractPhoneNumber(token);
 
-            // Add user info to request headers
+            // Add headers for downstream services
             ServerHttpRequest modifiedRequest = request.mutate()
                     .header("X-User-Id", userId)
                     .header("X-User-Role", role)
+                    .header("X-User-Phone", phoneNumber)
                     .build();
 
             log.debug("Authenticated user: {} with role: {}", userId, role);
@@ -71,6 +71,5 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
     }
 
     public static class Config {
-        // Configuration properties (if needed)
     }
 }
