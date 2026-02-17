@@ -55,9 +55,9 @@ public class OTPService {
 
     public void sendOTPToPhone(String phoneNumber, String otp) {
         log.info("=".repeat(50));
-        log.info("📱 SENDING SMS OTP TO: {}", phoneNumber);
-        log.info("🔐 OTP CODE: {}", otp);
-        log.info("⏰ Valid for: 5 minutes");
+        log.info("SENDING SMS OTP TO: {}", phoneNumber);
+        log.info("OTP CODE: {}", otp);
+        log.info(" Valid for: 5 minutes");
         log.info("=".repeat(50));
 
     }

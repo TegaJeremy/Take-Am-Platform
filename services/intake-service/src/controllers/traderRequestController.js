@@ -79,5 +79,5 @@ class TraderRequestController {
     }
 }
 
-// Export an instance, not the class
+
 module.exports = new TraderRequestController();

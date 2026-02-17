@@ -1,15 +1,20 @@
 package database
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"time"
 
+	"marketplace-service/models"
+
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/stdlib"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-	"marketplace-service/models"
 )
 
 var DB *gorm.DB
@@ -21,8 +26,9 @@ func ConnectDB() {
 	password := os.Getenv("DB_PASSWORD")
 	dbname := os.Getenv("DB_NAME")
 
+	// ✅ Neon requires SSL
 	dsn := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=require TimeZone=UTC",
 		host, user, password, dbname, port,
 	)
 
@@ -32,7 +38,26 @@ func ConnectDB() {
 	for i := 1; i <= maxRetries; i++ {
 		log.Printf("⏳ Attempting database connection (attempt %d/%d)...", i, maxRetries)
 
-		DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
+		// Parse config
+		config, err := pgx.ParseConfig(dsn)
+		if err != nil {
+			log.Fatalf("Failed to parse DB config: %v", err)
+		}
+
+		// 🔥 FORCE IPv4 (Fix for Render IPv6 issue)
+		config.DialFunc = func(ctx context.Context, network, addr string) (net.Conn, error) {
+			dialer := net.Dialer{
+				Timeout: 5 * time.Second,
+			}
+			return dialer.DialContext(ctx, "tcp4", addr)
+		}
+
+		// Open connection
+		sqlDB := stdlib.OpenDB(*config)
+
+		DB, err = gorm.Open(postgres.New(postgres.Config{
+			Conn: sqlDB,
+		}), &gorm.Config{
 			Logger: logger.Default.LogMode(logger.Info),
 		})
 
@@ -51,7 +76,18 @@ func ConnectDB() {
 		}
 	}
 
+	// Configure connection pool
+	sqlDBInstance, err := DB.DB()
+	if err != nil {
+		log.Fatal("Failed to get generic database object:", err)
+	}
+
+	sqlDBInstance.SetMaxOpenConns(10)
+	sqlDBInstance.SetMaxIdleConns(5)
+	sqlDBInstance.SetConnMaxLifetime(time.Hour)
+
 	log.Println("🔄 Running database migrations...")
+
 	err = DB.AutoMigrate(
 		&models.Product{},
 		&models.ProductImage{},
