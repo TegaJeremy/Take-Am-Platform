@@ -25,11 +25,16 @@ func ConnectDB() {
 	user := os.Getenv("DB_USER")
 	password := os.Getenv("DB_PASSWORD")
 	dbname := os.Getenv("DB_NAME")
+	env := os.Getenv("APP_ENV")
 
-	// ✅ Neon requires SSL
+	sslmode := "require"
+	if env == "local" || host == "localhost" || host == "127.0.0.1" {
+		sslmode = "disable"
+	}
+
 	dsn := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%s sslmode=require TimeZone=UTC",
-		host, user, password, dbname, port,
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=UTC",
+		host, user, password, dbname, port, sslmode,
 	)
 
 	var err error
@@ -38,21 +43,23 @@ func ConnectDB() {
 	for i := 1; i <= maxRetries; i++ {
 		log.Printf("⏳ Attempting database connection (attempt %d/%d)...", i, maxRetries)
 
-		// Parse config
 		config, err := pgx.ParseConfig(dsn)
 		if err != nil {
 			log.Fatalf("Failed to parse DB config: %v", err)
 		}
 
-		// 🔥 FORCE IPv4 (Fix for Render IPv6 issue)
-		config.DialFunc = func(ctx context.Context, network, addr string) (net.Conn, error) {
-			dialer := net.Dialer{
-				Timeout: 5 * time.Second,
+		if sslmode == "disable" {
+			config.DialFunc = func(ctx context.Context, network, addr string) (net.Conn, error) {
+				dialer := net.Dialer{Timeout: 5 * time.Second}
+				return dialer.DialContext(ctx, "tcp4", addr)
 			}
-			return dialer.DialContext(ctx, "tcp4", addr)
+		} else {
+			config.DialFunc = func(ctx context.Context, network, addr string) (net.Conn, error) {
+				dialer := net.Dialer{Timeout: 5 * time.Second}
+				return dialer.DialContext(ctx, "tcp4", addr)
+			}
 		}
 
-		// Open connection
 		sqlDB := stdlib.OpenDB(*config)
 
 		DB, err = gorm.Open(postgres.New(postgres.Config{
@@ -76,7 +83,6 @@ func ConnectDB() {
 		}
 	}
 
-	// Configure connection pool
 	sqlDBInstance, err := DB.DB()
 	if err != nil {
 		log.Fatal("Failed to get generic database object:", err)
