@@ -49,13 +49,13 @@ public class AgentService {
 
         User user = createAndSaveAgentUser(dto);
         createAndSaveAgent(dto, user);
-        String otp = sendRegistrationOTP(dto.getEmail(), dto.getFullName());  // ✅ FIXED
+        String otp = sendRegistrationOTP(dto.getEmail(), dto.getFullName());
 
         return new AuthResponseDto(
                 "Registration successful! OTP sent to your email address.",
                 dto.getEmail(),
                 true,
-                otp  // ✅ FIXED
+                otp
         );
     }
 
@@ -63,7 +63,7 @@ public class AgentService {
         String otp = otpService.generateOTP();
         otpService.storeOTP(email, otp);
         otpService.sendOTPToEmail(email, otp, fullName);
-        return otp;  // ✅ FIXED
+        return otp;
     }
 
     private void validateEmailNotExists(String email) {
@@ -164,13 +164,8 @@ public class AgentService {
 
         log.info("Agent {} registering trader on behalf", agentId);
 
-        // 1. Verify agent is approved and active
-        validateAgentCanRegisterTraders(agentId);
-
-        // 2. Call the EXISTING trader registration service!
+             validateAgentCanRegisterTraders(agentId);
         AuthResponseDto response = traderService.registerTrader(dto);
-
-        // 3. Track that this agent registered this trader
         trackAgentRegistration(dto.getPhoneNumber(), agentId);
 
         log.info("Agent {} successfully registered trader {}", agentId, dto.getPhoneNumber());

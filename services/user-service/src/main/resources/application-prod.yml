@@ -34,18 +34,23 @@ otp:
   expiration: ${OTP_EXPIRATION:300}
 
 management:
-  health:
-    redis:
-      enabled: true
-  endpoint:
-    health:
-      show-details: always
   endpoints:
     web:
       exposure:
         include: health,info
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+  health:
+    redis:
+      enabled: true
 
 logging:
   level:
     root: INFO
     com.takeam: INFO
+  termii:
+    api-key: ${TERMII_API_KEY}
+    sender-id: ${TERMII_SENDER_ID:talert}
+    api-url: ${TERMII_API_URL:https://v3.api.termii.com/api/sms/send}

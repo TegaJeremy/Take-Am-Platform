@@ -54,7 +54,34 @@ jwt:
   expiration: 86400000
   refresh-expiration: 604800000
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+  health:
+    mail:
+      enabled: false
+
 logging:
   level:
     root: INFO
     com.takeam: INFO
+    
+    management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+  termii:
+    api-key: TLwkpiGapWVMTKMMQmgnXwnrCMhwvRYnjZQmLUVYEYOpgqFTIdoTojPSVnYCIX
+    sender-id: talert
+    api-url: https://v3.api.termii.com/api/sms/send

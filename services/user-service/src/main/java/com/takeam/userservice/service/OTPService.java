@@ -12,24 +12,23 @@ import java.time.Duration;
 @RequiredArgsConstructor
 @Slf4j
 public class OTPService {
+
     private final RedisTemplate<String, String> redisTemplate;
-    private final EmailService emailService;
+    private final NotificationService notificationService;
+
     private static final String OTP_PREFIX = "otp:";
-    private static final int OTP_LENGTH = 6;
     private static final Duration OTP_VALIDITY = Duration.ofMinutes(5);
 
-
-    public String generateOTP(){
+    public String generateOTP() {
         SecureRandom random = new SecureRandom();
-        int otp = 10000 + random.nextInt(900000);
+        int otp = 100000 + random.nextInt(900000);
         return String.valueOf(otp);
     }
 
-    public void storeOTP(String identifier, String otp  ){
-        String key =  OTP_PREFIX + identifier;
-        redisTemplate.opsForValue().set(key, otp,  OTP_VALIDITY);
+    public void storeOTP(String identifier, String otp) {
+        String key = OTP_PREFIX + identifier;
+        redisTemplate.opsForValue().set(key, otp, OTP_VALIDITY);
         log.info("OTP stored for: {} (expires in 5 minutes)", identifier);
-
     }
 
     public boolean verifyOTP(String identifier, String otp) {
@@ -53,23 +52,28 @@ public class OTPService {
         return isValid;
     }
 
-    public void sendOTPToPhone(String phoneNumber, String otp) {
-        log.info("=".repeat(50));
-        log.info("SENDING SMS OTP TO: {}", phoneNumber);
-        log.info("OTP CODE: {}", otp);
-        log.info(" Valid for: 5 minutes");
-        log.info("=".repeat(50));
-
-    }
-
-    public void sendOTPToEmail(String email, String otp, String recipientName) {
-        emailService.sendOTPEmail(email, otp, recipientName);
-    }
-
-
     public boolean hasValidOTP(String identifier) {
         String key = OTP_PREFIX + identifier;
         return Boolean.TRUE.equals(redisTemplate.hasKey(key));
     }
 
+    // ─────────────────────────────────────────────
+    // SEND HELPERS
+    // ─────────────────────────────────────────────
+
+    public void sendOTPToPhone(String phoneNumber, String otp) {
+        notificationService.sendSmsOtp(phoneNumber, otp);
+    }
+
+    public void sendOTPToEmail(String email, String otp, String name) {
+        notificationService.sendEmailOtp(email, otp, name);
+    }
+
+    public void sendLoginOTPToEmail(String email, String otp, String name) {
+        notificationService.sendLoginEmailOtp(email, otp, name);
+    }
+
+    public void sendPasswordResetOTP(String email, String otp, String name) {
+        notificationService.sendPasswordResetOtp(email, otp, name);
+    }
 }
