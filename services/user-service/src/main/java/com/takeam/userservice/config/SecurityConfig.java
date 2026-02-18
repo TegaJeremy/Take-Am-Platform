@@ -34,9 +34,9 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        // public endpoints
-                        .requestMatchers(
+                       .requestMatchers(
                                 "/api/v1/traders/register",
                                 "/api/v1/traders/verify-otp",
                                 "/api/v1/traders/resend-otp",
@@ -89,7 +89,7 @@ public class SecurityConfig {
                 "http://localhost:5173",
                 "https://takeam.com",
                 "https://www.takeam.com",
-                "https://tegajeremy.github.io"  // ADD THIS
+                "https://tegajeremy.github.io"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("*"));

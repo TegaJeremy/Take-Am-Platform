@@ -24,13 +24,13 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private void seedSuperAdmin() {
-        // Check if super admin already exists
+
         if (userRepository.findByEmail("oghenedemartin@gmail.com").isPresent()) {
             log.info("Super admin already exists");
             return;
         }
 
-        // Create super admin
+
         User superAdmin = new User();
         superAdmin.setEmail("oghenedemartin@gmail.com");
         superAdmin.setFullName("Super Administrator");
