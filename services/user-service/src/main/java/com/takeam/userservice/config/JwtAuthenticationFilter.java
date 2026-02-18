@@ -35,7 +35,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
 
-        // ✅ SKIP JWT FILTER FOR PUBLIC ENDPOINTS
+        
         String path = request.getRequestURI();
         if (shouldNotFilter(path)) {
             log.info("⏭️ Skipping JWT filter for public path: {}", path);
@@ -43,12 +43,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        log.info("🔍 JWT Filter hit for: {} {}", request.getMethod(), request.getRequestURI());
+        log.info(" JWT Filter hit for: {} {}", request.getMethod(), request.getRequestURI());
 
         final String authHeader = request.getHeader("Authorization");
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            log.warn("❌ No valid Authorization header found");
+            log.warn(" No valid Authorization header found");
             filterChain.doFilter(request, response);
             return;
         }
@@ -92,7 +92,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    // ✅ ADD THIS METHOD - Skip filter for public paths
+  
     private boolean shouldNotFilter(String path) {
         return path.startsWith("/actuator/") ||
                 path.equals("/health") ||

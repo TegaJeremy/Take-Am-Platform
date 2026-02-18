@@ -15,17 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-/**
- * JWT Utility Class
- *
- * Responsibilities:
- * - Generate JWT access and refresh tokens
- * - Validate tokens
- * - Extract claims from tokens
- * - Handle token signing and verification
- *
- * This is the ONLY class that should handle JWT token creation and validation.
- */
+
 @Component
 @Slf4j
 public class JwtUtil {

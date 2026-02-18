@@ -71,6 +71,7 @@ spring:
               - "http://localhost:5173"
               - "https://takeam.com"
               - "https://www.takeam.com"
+              - "https://tegajeremy.github.io"
             allowedMethods:
               - GET
               - POST

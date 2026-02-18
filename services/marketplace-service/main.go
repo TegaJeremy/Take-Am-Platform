@@ -2,7 +2,8 @@ package main
 
 import (
 	"log"
-
+	
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"marketplace-service/config"
@@ -24,6 +25,22 @@ func main() {
 	}
 
 	router := gin.Default()
+
+	// ADD CORS MIDDLEWARE
+	router.Use(cors.New(cors.Config{
+		AllowOrigins: []string{
+			"http://localhost:3000",
+			"http://localhost:5173",
+			"https://takeam.com",
+			"https://www.takeam.com",
+			"https://tegajeremy.github.io",  // ADD THIS
+		},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "X-User-Id", "X-User-Role", "X-User-Phone"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           3600,
+	}))
 
 	routes.SetupRoutes(router, cfg)  
 
