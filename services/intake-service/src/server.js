@@ -32,7 +32,7 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-console.log('✅ Middleware configured');
+console.log('✅Middleware configured');
 
 
 app.get('/health', (req, res) => {
