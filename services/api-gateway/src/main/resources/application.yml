@@ -72,6 +72,7 @@ spring:
               - "https://takeam.com"
               - "https://www.takeam.com"
               - "https://tegajeremy.github.io"
+              - "https://take-am.netlify.app"
             allowedMethods:
               - GET
               - POST

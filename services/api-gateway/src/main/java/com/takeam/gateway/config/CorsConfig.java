@@ -57,7 +57,8 @@ public class CorsConfig {
                 "http://localhost:5173",
                 "https://takeam.com",
                 "https://www.takeam.com",
-                "https://tegajeremy.github.io"
+                "https://tegajeremy.github.io",
+                "https://take-am.netlify.app"
         ));
 
         corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
