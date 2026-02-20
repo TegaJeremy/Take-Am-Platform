@@ -24,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class BuyerService {
+public class   BuyerService {
 
     private final UserRepository userRepository;
     private final BuyerRepository buyerRepository;
