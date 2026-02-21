@@ -22,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -30,33 +29,39 @@ public class UnifiedAuthService {
 
     private final UserRepository userRepository;
     private final OTPService otpService;
-    private final JwtUtil jwtUtil;  // Injected utility for token operations
+    private final JwtUtil jwtUtil;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
 
-
+    /**
+     * Unified login entry point
+     */
     @Transactional
     public Object login(UnifiedLoginDto request) {
-        log.info("Login request for: {}", request.getIdentifier());
+        log.info("Login attempt for identifier: {}", request.getIdentifier());
+
+        if (request.getIdentifier() == null || request.getIdentifier().isBlank()) {
+            throw new BadRequestException("Login identifier is required");
+        }
 
         boolean isPhoneNumber = request.getIdentifier().startsWith("+");
 
-        if (isPhoneNumber) {
-            return handleTraderOTPLogin(request.getIdentifier());
-        } else {
-            return handlePasswordLogin(request.getIdentifier(), request.getPassword());
-        }
+        return isPhoneNumber
+                ? handleTraderOTPLogin(request.getIdentifier())
+                : handlePasswordLogin(request.getIdentifier(), request.getPassword());
     }
 
-
+    /**
+     * Trader login via OTP
+     */
     private AuthResponseDto handleTraderOTPLogin(String phoneNumber) {
-        log.info("Trader OTP login for: {}", phoneNumber);
+        log.info("OTP login requested for phone number: {}", phoneNumber);
 
         User user = userRepository.findByPhoneNumber(phoneNumber)
-                .orElseThrow(() -> new ResourceNotFoundException("Phone number not registered"));
+                .orElseThrow(() -> new ResourceNotFoundException("Phone number is not registered"));
 
         if (user.getRole() != Role.TRADER) {
-            throw new BadRequestException("This phone number is not registered as a trader");
+            throw new BadRequestException("Only traders can log in with phone number");
         }
 
         validateAccountStatus(user);
@@ -66,101 +71,108 @@ public class UnifiedAuthService {
         otpService.sendOTPToPhone(phoneNumber, otp);
 
         return new AuthResponseDto(
-                "OTP sent to your phone number",
+                "An OTP has been sent to your phone number",
                 phoneNumber,
                 true,
                 otp
         );
     }
 
-
+    /**
+     * Email + password login (non-traders)
+     */
     private TokenResponseDto handlePasswordLogin(String email, String password) {
-        log.info("Password login for: {}", email);
+        log.info("Password login attempt for email: {}", email);
 
-        if (password == null || password.isEmpty()) {
+        if (password == null || password.isBlank()) {
             throw new BadRequestException("Password is required");
         }
 
-
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("Email not registered"));
+                .orElseThrow(() -> new ResourceNotFoundException("Email is not registered"));
 
-        // Verify NOT a trader
         if (user.getRole() == Role.TRADER) {
-            throw new BadRequestException("Traders must login with phone number and OTP");
+            throw new BadRequestException("Traders must log in using phone number and OTP");
         }
-
 
         validateAccountStatus(user);
 
-
         if (!passwordEncoder.matches(password, user.getPasswordHash())) {
             handleFailedLogin(user);
-            throw new UnauthorizedException("Invalid email or password");
+            throw new UnauthorizedException("Invalid password");
         }
 
         return generateTokenResponse(user);
     }
 
-
+    /**
+     * OTP verification
+     */
     @Transactional
     public TokenResponseDto verifyOTP(OTPVerificationDto request) {
-        log.info("Verifying OTP for: {}", request.getPhoneNumber());
+        log.info("OTP verification for phone number: {}", request.getPhoneNumber());
 
-        // Verify OTP
-        boolean isValid = otpService.verifyOTP(request.getPhoneNumber(), request.getOtp());
+        boolean isValid = otpService.verifyOTP(
+                request.getPhoneNumber(),
+                request.getOtp()
+        );
 
         if (!isValid) {
-            throw new BadRequestException("Invalid or expired OTP");
+            throw new BadRequestException("The OTP you entered is invalid or expired");
         }
 
-
         User user = userRepository.findByPhoneNumber(request.getPhoneNumber())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
+                .orElseThrow(() -> new ResourceNotFoundException("User account not found"));
 
         return generateTokenResponse(user);
     }
 
-
+    /**
+     * Account status validation
+     */
     private void validateAccountStatus(User user) {
+
         if (user.getStatus() != UserStatus.ACTIVE) {
-            if (user.getStatus() == UserStatus.PENDING) {
-                if (user.getRole() == Role.AGENT) {
-                    throw new UnauthorizedException("Your account is pending admin approval");
-                }
+            if (user.getStatus() == UserStatus.PENDING && user.getRole() == Role.AGENT) {
+                throw new UnauthorizedException("Your account is awaiting admin approval");
             }
-            throw new UnauthorizedException("Account is " + user.getStatus() + ". Please contact support.");
+            throw new UnauthorizedException("Your account is not active. Please contact support");
         }
 
-
-        if (user.getLockedUntil() != null && user.getLockedUntil().isAfter(LocalDateTime.now())) {
-            throw new UnauthorizedException("Account is temporarily locked. Try again later.");
+        if (user.getLockedUntil() != null &&
+                user.getLockedUntil().isAfter(LocalDateTime.now())) {
+            throw new UnauthorizedException(
+                    "Your account is temporarily locked. Please try again later"
+            );
         }
     }
 
-
+    /**
+     * Failed password attempt handler
+     */
     private void handleFailedLogin(User user) {
         user.setLoginAttempts(user.getLoginAttempts() + 1);
 
-        // Lock account after 5 failed attempts
         if (user.getLoginAttempts() >= 5) {
             user.setLockedUntil(LocalDateTime.now().plusMinutes(30));
             userRepository.save(user);
-            throw new UnauthorizedException("Too many failed attempts. Account locked for 30 minutes.");
+            throw new UnauthorizedException(
+                    "Too many failed attempts. Your account is locked for 30 minutes"
+            );
         }
 
         userRepository.save(user);
     }
 
-
+    /**
+     * Token generation
+     */
     private TokenResponseDto generateTokenResponse(User user) {
 
         user.setLoginAttempts(0);
         user.setLockedUntil(null);
         user.setLastLogin(LocalDateTime.now());
         userRepository.save(user);
-
 
         String accessToken = jwtUtil.generateToken(
                 user.getId().toString(),
@@ -171,7 +183,6 @@ public class UnifiedAuthService {
         String refreshToken = jwtUtil.generateRefreshToken(
                 user.getId().toString()
         );
-
 
         UserResponseDto userDto = userMapper.toUserResponseDto(user);
 
@@ -184,3 +195,19 @@ public class UnifiedAuthService {
         );
     }
 }
+
+
+//Retrieve SMTP credentials
+//This is the only time you can view and download these SMTP security credentials. Never share your SMTP credentials with anyone.
+//
+//        SMTP credentials
+//IAM user name
+//
+//ses-smtp-user.20260220-232608
+//SMTP user name
+//
+//        AKIAZI2LCGLLUJTDKHXE
+//SMTP password
+//
+//BLrxafqepyIJQAn9xL67PSINY9DKAVNohHJirxGuP4GQ
+//        Hide

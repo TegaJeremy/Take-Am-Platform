@@ -1,18 +1,26 @@
 package com.takeam.gateway.controller;
 
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+
+import java.time.Duration;
 import java.util.List;
-import java.util.ArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @RestController
 @RequestMapping("/internal")
 public class WakeController {
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
+
+    public WakeController(RestTemplateBuilder builder) {
+        this.restTemplate = builder
+                .setConnectTimeout(Duration.ofSeconds(10))
+                .setReadTimeout(Duration.ofSeconds(90)) // allow cold start
+                .build();
+    }
 
     @GetMapping("/wake-services")
     public ResponseEntity<?> wakeServices() {
@@ -23,17 +31,30 @@ public class WakeController {
                 "https://takeam-user-service.onrender.com/actuator/health"
         );
 
-        List<String> results = new ArrayList<>();
+        // Thread-safe list because we’re using parallel stream
+        List<String> results = new CopyOnWriteArrayList<>();
 
-        for (String url : services) {
+        services.parallelStream().forEach(url -> {
             try {
+                long start = System.currentTimeMillis();
+
                 ResponseEntity<String> response =
                         restTemplate.getForEntity(url, String.class);
-                results.add(url + " → " + response.getStatusCode());
+
+                long duration = System.currentTimeMillis() - start;
+
+                results.add(
+                        url + " → " +
+                                response.getStatusCode() +
+                                " (" + duration + "ms)"
+                );
+
             } catch (Exception e) {
-                results.add(url + " → ERROR");
+                results.add(
+                        url + " → ERROR: " + e.getMessage()
+                );
             }
-        }
+        });
 
         return ResponseEntity.ok(results);
     }
